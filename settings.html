@@ -6,7 +6,7 @@
 <title>Setting Hadiah → Buat Link Terenkripsi</title>
 <style>
   :root { --bg:#0f172a; --card:#111827; --txt:#e5e7eb; --muted:#9ca3af; --accent:#22c55e; }
-  body { font-family: system-ui, sans-serif; background:linear-gradient(135deg,#0b1022,#0f172a 20%,#0b132e); color:var(--txt); margin:0; padding:24px; }
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial; background:linear-gradient(135deg,#0b1022,#0f172a 20%,#0b132e); color:var(--txt); margin:0; padding:24px; }
   .wrap { max-width: 720px; margin: 0 auto; }
   .card { background: var(--card); border:1px solid #1f2937; border-radius:18px; padding:20px; box-shadow: 0 10px 30px rgba(0,0,0,.25);}
   h1 { margin:0 0 12px; font-size: 22px; }
@@ -26,7 +26,7 @@
   <div class="wrap">
     <div class="card">
       <h1>Setting Hadiah 🎁 → Buat Link</h1>
-      <p class="note">Masukkan data hadiah (nama akun & password). Tentukan <b>kata sandi pembuka</b>—hanya yang tahu sandi ini yang bisa membuka datanya.</p>
+      <p class="note">Masukkan data hadiah (nama akun & password). Tentukan <b>kata sandi pembuka</b>.</p>
 
       <label>Nama Akun (hadiah)</label>
       <input id="accName" placeholder="mis. premium_user01" />
@@ -35,16 +35,16 @@
       <input id="accPass" placeholder="mis. Abc!2345" />
 
       <label>Catatan / Link Hadiah</label>
-      <textarea id="note">https://ryzznihdekk.xyroku.my.id</textarea>
+      <textarea id="note" placeholder="mis. https://ryzznihdekk.xyroku.my.id"></textarea>
 
       <div class="row">
         <div>
           <label>Kata Sandi Pembuka</label>
-          <input id="unlockPass" type="password" placeholder="buat sandi untuk membuka hadiah" />
+          <input id="unlockPass" type="password" placeholder="buat sandi" />
         </div>
         <div>
           <label>Ulangi Kata Sandi Pembuka</label>
-          <input id="unlockPass2" type="password" placeholder="ulang sandi untuk verifikasi" />
+          <input id="unlockPass2" type="password" placeholder="ulang sandi" />
         </div>
       </div>
 
@@ -54,13 +54,12 @@
         <button class="btn secondary" id="copyLink" style="display:none;">Salin Link</button>
         <a id="testOpen" class="btn secondary" style="display:none;" target="_blank" rel="noopener">Buka (tes)</a>
       </div>
-      <p class="small">Keamanan: data hadiah tidak disimpan server. Link berisi payload terenkripsi AES-GCM (Web Crypto) dengan sandi pembuka + PBKDF2. Bagikan sandinya secara terpisah.</p>
+      <p class="small">Keamanan: data hadiah tidak disimpan server. Link berisi payload terenkripsi AES-GCM (Web Crypto).</p>
     </div>
   </div>
 
 <script>
 const enc = new TextEncoder();
-const dec = new TextDecoder();
 
 async function deriveKey(password, salt){
   const baseKey = await crypto.subtle.importKey(
@@ -74,6 +73,7 @@ async function deriveKey(password, salt){
     ["encrypt","decrypt"]
   );
 }
+
 function b64e(buf){ return btoa(String.fromCharCode(...new Uint8Array(buf))); }
 
 async function encryptPayload(obj, password){
@@ -87,13 +87,8 @@ async function encryptPayload(obj, password){
 
 function buildLink(payload){
   const hash = `v1:${payload.salt}:${payload.iv}:${payload.ct}`;
-  let baseUrl = window.location.href;
-  if (baseUrl.match(/\.html/i)) {
-    baseUrl = baseUrl.replace(/[^\/?#]+$/, 'open.html');
-  } else {
-    if (!baseUrl.endsWith('/')) baseUrl += '/';
-    baseUrl += 'open.html';
-  }
+  let baseUrl = window.location.origin + window.location.pathname;
+  baseUrl = baseUrl.replace(/[^\/]+$/, 'open.html');
   return `${baseUrl}#${hash}`;
 }
 
@@ -104,8 +99,8 @@ document.getElementById('makeLink').addEventListener('click', async () => {
   const up1     = document.getElementById('unlockPass').value;
   const up2     = document.getElementById('unlockPass2').value;
 
-  if(!accName || !accPass){ alert('Nama Akun dan Password wajib diisi.'); return; }
-  if(!up1 || up1.length < 6){ alert('Kata Sandi minimal 6 karakter.'); return; }
+  if(!accName || !accPass){ alert('Nama Akun & Password wajib.'); return; }
+  if(!up1 || up1.length < 6){ alert('Sandi pembuka minimal 6 karakter.'); return; }
   if(up1 !== up2){ alert('Ulangan sandi tidak sama.'); return; }
 
   const gift = { accName, accPass, note, ts: Date.now() };
@@ -119,14 +114,15 @@ document.getElementById('makeLink').addEventListener('click', async () => {
     const copyBtn = document.getElementById('copyLink');
     copyBtn.style.display = 'inline-block';
     copyBtn.onclick = async () => {
-      try{ await navigator.clipboard.writeText(link); copyBtn.textContent = 'Tersalin ✅'; setTimeout(()=>copyBtn.textContent='Salin Link', 1200);}catch(e){ alert('Gagal menyalin.'); }
+      await navigator.clipboard.writeText(link);
+      copyBtn.textContent = 'Tersalin ✅';
+      setTimeout(()=>copyBtn.textContent='Salin Link', 1200);
     };
 
     const test = document.getElementById('testOpen');
     test.style.display = 'inline-block';
     test.href = link;
   }catch(e){
-    console.error(e);
     alert('Gagal membuat link.');
   }
 });
