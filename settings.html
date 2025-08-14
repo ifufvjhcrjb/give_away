@@ -6,7 +6,7 @@
 <title>Setting Hadiah → Buat Link Terenkripsi</title>
 <style>
   :root { --bg:#0f172a; --card:#111827; --txt:#e5e7eb; --muted:#9ca3af; --accent:#22c55e; }
-  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji','Segoe UI Emoji'; background:linear-gradient(135deg,#0b1022,#0f172a 20%,#0b132e); color:var(--txt); margin:0; padding:24px; }
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial; background:linear-gradient(135deg,#0b1022,#0f172a 20%,#0b132e); color:var(--txt); margin:0; padding:24px; }
   .wrap { max-width: 720px; margin: 0 auto; }
   .card { background: var(--card); border:1px solid #1f2937; border-radius:18px; padding:20px; box-shadow: 0 10px 30px rgba(0,0,0,.25);}
   h1 { margin:0 0 12px; font-size: 22px; }
@@ -26,7 +26,7 @@
   <div class="wrap">
     <div class="card">
       <h1>Setting Hadiah 🎁 → Buat Link</h1>
-      <p class="note">Masukkan data hadiah (nama akun & password). Tentukan <b>kata sandi pembuka</b>—hanya yang tahu sandi ini yang bisa membuka datanya.</p>
+      <p class="note">Masukkan data hadiah (nama akun & password). Tentukan <b>kata sandi pembuka</b>.</p>
 
       <label>Nama Akun (hadiah)</label>
       <input id="accName" placeholder="mis. premium_user01" />
@@ -54,7 +54,7 @@
         <button class="btn secondary" id="copyLink" style="display:none;">Salin Link</button>
         <a id="testOpen" class="btn secondary" style="display:none;" target="_blank" rel="noopener">Buka (tes)</a>
       </div>
-      <p class="small">Keamanan: data hadiah tidak disimpan server. Link berisi <i>payload</i> terenkripsi AES-GCM (Web Crypto) dengan sandi pembuka + PBKDF2. Bagikan sandinya secara terpisah.</p>
+      <p class="small">Keamanan: data hadiah tidak disimpan server. Link berisi <i>payload</i> terenkripsi AES-GCM (Web Crypto).</p>
     </div>
   </div>
 
@@ -75,12 +75,7 @@ async function deriveKey(password, salt){
   );
 }
 
-function b64e(buf){
-  return btoa(String.fromCharCode(...new Uint8Array(buf)));
-}
-function b64d(str){
-  return Uint8Array.from(atob(str), c => c.charCodeAt(0));
-}
+function b64e(buf){ return btoa(String.fromCharCode(...new Uint8Array(buf))); }
 
 async function encryptPayload(obj, password){
   const salt = crypto.getRandomValues(new Uint8Array(16));
@@ -88,17 +83,19 @@ async function encryptPayload(obj, password){
   const key  = await deriveKey(password, salt);
   const data = enc.encode(JSON.stringify(obj));
   const ct   = await crypto.subtle.encrypt({name:"AES-GCM", iv}, key, data);
-  return {
-    salt: b64e(salt),
-    iv:   b64e(iv),
-    ct:   b64e(ct)
-  };
+  return { salt: b64e(salt), iv: b64e(iv), ct: b64e(ct) };
 }
 
 function buildLink(payload){
   const hash = `v1:${payload.salt}:${payload.iv}:${payload.ct}`;
   let baseUrl = window.location.href;
-  baseUrl = baseUrl.replace(/[^\/?#]+$/, 'open.html'); // otomatis ganti jadi open.html
+
+  if (baseUrl.match(/\.html/i)) {
+    baseUrl = baseUrl.replace(/[^\/?#]+$/, 'open.html');
+  } else {
+    if (!baseUrl.endsWith('/')) baseUrl += '/';
+    baseUrl += 'open.html';
+  }
   return `${baseUrl}#${hash}`;
 }
 
@@ -109,18 +106,9 @@ document.getElementById('makeLink').addEventListener('click', async () => {
   const up1     = document.getElementById('unlockPass').value;
   const up2     = document.getElementById('unlockPass2').value;
 
-  if(!accName || !accPass){
-    alert('Nama Akun dan Password Akun hadiah wajib diisi.');
-    return;
-  }
-  if(!up1 || up1.length < 6){
-    alert('Kata Sandi Pembuka minimal 6 karakter.');
-    return;
-  }
-  if(up1 !== up2){
-    alert('Ulangan sandi tidak sama.');
-    return;
-  }
+  if(!accName || !accPass){ alert('Nama Akun dan Password wajib diisi.'); return; }
+  if(!up1 || up1.length < 6){ alert('Kata Sandi minimal 6 karakter.'); return; }
+  if(up1 !== up2){ alert('Ulangan sandi tidak sama.'); return; }
 
   const gift = { accName, accPass, note, ts: Date.now() };
   try{
