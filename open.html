@@ -3,61 +3,62 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Buka Hadiah</title>
+<title>Buka Hadiah 🎁</title>
 <style>
-  :root { --bg:#0f172a; --card:#111827; --txt:#e5e7eb; --accent:#22c55e; }
-  body { font-family: system-ui, sans-serif; background:linear-gradient(135deg,#0b1022,#0f172a 20%,#0b132e); color:var(--txt); margin:0; padding:24px; }
-  .wrap { max-width: 720px; margin: 0 auto; }
-  .card { background: var(--card); border:1px solid #1f2937; border-radius:18px; padding:20px; }
-  input { width:100%; padding:12px 14px; border-radius:12px; border:1px solid #334155; background:#0b1022; color:var(--txt); outline:none; }
-  .btn { margin-top:16px; padding:12px 16px; border:none; border-radius:12px; background:var(--accent); color:#052e1b; font-weight:800; cursor:pointer; }
+  body { font-family: system-ui; background:#0f172a; color:#e5e7eb; padding:20px; }
+  .card { background:#111827; border-radius:18px; padding:20px; max-width:600px; margin:auto; }
+  input { width:100%; padding:10px; border-radius:8px; border:1px solid #334155; background:#0b1022; color:white; }
+  button { padding:10px 14px; border-radius:8px; border:none; cursor:pointer; }
+  .btn-primary { background:#22c55e; color:#052e1b; font-weight:700; }
+  .btn-secondary { background:#0b1022; color:#e5e7eb; border:1px solid #334155; }
+  .data { margin-top:12px; padding:8px; background:#0b1022; border-radius:8px; }
   a { color:#38bdf8; }
-  .copyBtn { margin-left:8px; padding:4px 8px; font-size:12px; border:none; border-radius:6px; background:#334155; color:var(--txt); cursor:pointer; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="card">
-    <h1>Buka Hadiah 🎁</h1>
-    <input id="pass" type="password" placeholder="Masukkan kata sandi pembuka" />
-    <button class="btn" id="openBtn">Buka</button>
+<div class="card">
+  <h2>Buka Hadiah 🎁</h2>
+  <p>Masukkan kata sandi pembuka:</p>
+  <input id="pass" type="password" placeholder="kata sandi pembuka" />
+  <button class="btn-primary" id="openBtn">Buka</button>
 
-    <div id="result" style="display:none; margin-top:20px;">
-      <div><b>Nama Akun:</b> <span id="accName"></span> <button class="copyBtn" onclick="copyText('accName')">Salin</button></div>
-      <div><b>Password:</b> <span id="accPass"></span> <button class="copyBtn" onclick="copyText('accPass')">Salin</button></div>
-      <div style="margin-top:10px;"><b>🎁 Link Hadiah:</b> <a id="giftLink" href="" target="_blank"></a></div>
-      <div style="margin-top:6px;"><b>Catatan:</b> <span id="noteText"></span></div>
-      <small>Dibuat: <span id="createdAt"></span></small>
+  <div id="result" style="display:none; margin-top:20px;">
+    <div class="data">
+      <b>Nama Akun:</b> <span id="accName"></span>
+      <button class="btn-secondary" onclick="copyText('accName')">Salin</button>
     </div>
+    <div class="data">
+      <b>Password:</b> <span id="accPass"></span>
+      <button class="btn-secondary" onclick="copyText('accPass')">Salin</button>
+    </div>
+    <div class="data" id="linkSection" style="display:none;">
+      <b>🎁 Link Hadiah:</b> <a id="giftLink" href="" target="_blank"></a>
+    </div>
+    <div class="data" id="noteSection" style="display:none;">
+      <b>Catatan:</b> <span id="noteText"></span>
+    </div>
+    <small>Dibuat: <span id="createdAt"></span></small>
   </div>
 </div>
 
 <script>
-const enc = new TextEncoder();
 const dec = new TextDecoder();
 
-async function deriveKey(password, salt){
-  const baseKey = await crypto.subtle.importKey("raw", enc.encode(password), {name:"PBKDF2"}, false, ["deriveKey"]);
-  return crypto.subtle.deriveKey({name:"PBKDF2", salt, iterations:150000, hash:"SHA-256"}, baseKey, {name:"AES-GCM", length:256}, false, ["decrypt"]);
+function parseHash(){
+  const h = location.hash.slice(1);
+  const [ver,salt,iv,ct] = h.split(':');
+  if(ver!=='v1') throw new Error('Versi salah');
+  return {salt,iv,ct};
 }
 function b64d(str){ return Uint8Array.from(atob(str), c => c.charCodeAt(0)); }
-
+async function deriveKey(password, salt){
+  const baseKey = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), {name:"PBKDF2"}, false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2", salt, iterations:150000, hash:"SHA-256"}, baseKey, {name:"AES-GCM", length:256}, false, ["encrypt","decrypt"]);
+}
 async function decryptPayload(payload, password){
-  const salt = b64d(payload.salt);
-  const iv   = b64d(payload.iv);
-  const key  = await deriveKey(password, salt);
-  const ct   = b64d(payload.ct);
-  const plain = await crypto.subtle.decrypt({name:"AES-GCM", iv}, key, ct);
-  return JSON.parse(dec.decode(plain));
-}
-function parseHash(){
-  const h = location.hash.slice(1).split(':');
-  if(h.length!==4 || h[0]!=='v1') throw new Error('Format hash salah');
-  return { salt:h[1], iv:h[2], ct:h[3] };
-}
-function copyText(id){
-  const text = document.getElementById(id).textContent;
-  navigator.clipboard.writeText(text).then(()=>alert('Tersalin: '+text));
+  const key = await deriveKey(password, b64d(payload.salt));
+  const pt  = await crypto.subtle.decrypt({name:"AES-GCM", iv: b64d(payload.iv)}, key, b64d(payload.ct));
+  return JSON.parse(dec.decode(pt));
 }
 
 document.getElementById('openBtn').onclick = async () => {
@@ -69,24 +70,29 @@ document.getElementById('openBtn').onclick = async () => {
     document.getElementById('accName').textContent = data.accName;
     document.getElementById('accPass').textContent = data.accPass;
 
-    // Link hadiah
-    const linkHadiah = document.getElementById('giftLink');
-    linkHadiah.textContent = data.note;
-    linkHadiah.href = data.note;
-    linkHadiah.style.display = 'inline';
+    if(data.note){
+      if(/^https?:\/\//i.test(data.note)){
+        const giftLink = document.getElementById('giftLink');
+        giftLink.textContent = data.note;
+        giftLink.href = data.note;
+        document.getElementById('linkSection').style.display = 'block';
+        setTimeout(()=>document.getElementById('linkSection').remove(), 15000);
+      }
+      document.getElementById('noteText').textContent = data.note;
+      document.getElementById('noteSection').style.display = 'block';
+    }
 
-    // Catatan
-    document.getElementById('noteText').textContent = data.note;
     document.getElementById('createdAt').textContent = new Date(data.ts).toLocaleString();
     document.getElementById('result').style.display = 'block';
-
-    // Hilangkan link setelah 15 detik
-    setTimeout(() => { linkHadiah.remove(); }, 15000);
-
   } catch(e) {
     alert('Gagal membuka hadiah. Kata sandi salah atau data rusak.');
   }
 };
+
+function copyText(id){
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(()=>alert('Tersalin: ' + text));
+}
 </script>
 </body>
 </html>
