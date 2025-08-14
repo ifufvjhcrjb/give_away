@@ -19,7 +19,6 @@
   .btn.secondary { background:#0b1022; color:#e5e7eb; border:1px solid #334155; }
   .out { margin-top:18px; word-break: break-all; background:#0b1022; border:1px dashed #334155; padding:12px; border-radius:12px; }
   .small { font-size:12px; color:#94a3b8; }
-  .center { text-align:center; }
   .flex { display:flex; gap:10px; flex-wrap:wrap; }
 </style>
 </head>
@@ -60,11 +59,9 @@
   </div>
 
 <script>
-/** Util kecil **/
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 
-/** PBKDF2 → kunci AES-GCM 256 bit */
 async function deriveKey(password, salt){
   const baseKey = await crypto.subtle.importKey(
     "raw", enc.encode(password), {name:"PBKDF2"}, false, ["deriveKey"]
@@ -78,12 +75,8 @@ async function deriveKey(password, salt){
   );
 }
 
-/** helper b64 */
 function b64e(buf){
   return btoa(String.fromCharCode(...new Uint8Array(buf)));
-}
-function b64d(str){
-  return Uint8Array.from(atob(str), c => c.charCodeAt(0));
 }
 
 async function encryptPayload(obj, password){
@@ -100,10 +93,18 @@ async function encryptPayload(obj, password){
 }
 
 function buildLink(payload){
-  // format: #v1:<salt>:<iv>:<ct>
   const hash = `v1:${payload.salt}:${payload.iv}:${payload.ct}`;
-  // ganti "open.html" sesuai nama/host file kamu
   return `open.html#${hash}`;
+}
+
+async function shorten(url) {
+  try {
+    const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`);
+    return await res.text();
+  } catch (err) {
+    console.error(err);
+    return url; // fallback kalau gagal
+  }
 }
 
 document.getElementById('makeLink').addEventListener('click', async () => {
@@ -130,19 +131,22 @@ document.getElementById('makeLink').addEventListener('click', async () => {
   try{
     const encrypted = await encryptPayload(gift, up1);
     const link = buildLink(encrypted);
+
+    const shortLink = await shorten(link);
+
     const res  = document.getElementById('result');
     res.style.display = 'block';
-    res.textContent = link;
+    res.textContent = shortLink;
 
     const copyBtn = document.getElementById('copyLink');
     copyBtn.style.display = 'inline-block';
     copyBtn.onclick = async () => {
-      try{ await navigator.clipboard.writeText(link); copyBtn.textContent = 'Tersalin ✅'; setTimeout(()=>copyBtn.textContent='Salin Link', 1200);}catch(e){ alert('Gagal menyalin.'); }
+      try{ await navigator.clipboard.writeText(shortLink); copyBtn.textContent = 'Tersalin ✅'; setTimeout(()=>copyBtn.textContent='Salin Link', 1200);}catch(e){ alert('Gagal menyalin.'); }
     };
 
     const test = document.getElementById('testOpen');
     test.style.display = 'inline-block';
-    test.href = link;
+    test.href = shortLink;
   }catch(e){
     console.error(e);
     alert('Gagal membuat link.');
