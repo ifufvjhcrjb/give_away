@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Setting Hadiah → Buat Link Terenkripsi</title>
+<style>
+  :root { --bg:#0f172a; --card:#111827; --txt:#e5e7eb; --muted:#9ca3af; --accent:#22c55e; }
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji','Segoe UI Emoji'; background:linear-gradient(135deg,#0b1022,#0f172a 20%,#0b132e); color:var(--txt); margin:0; padding:24px; }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  .card { background: var(--card); border:1px solid #1f2937; border-radius:18px; padding:20px; box-shadow: 0 10px 30px rgba(0,0,0,.25);}
+  h1 { margin:0 0 12px; font-size: 22px; }
+  p.note { color: var(--muted); margin-top:0 }
+  label { display:block; margin:14px 0 6px; color:#cbd5e1; font-weight:600; }
+  input, textarea { width:100%; padding:12px 14px; border-radius:12px; border:1px solid #334155; background:#0b1022; color:var(--txt); outline:none; }
+  textarea { min-height: 80px; resize: vertical; }
+  .row { display:grid; gap:12px; grid-template-columns: 1fr 1fr; }
+  .btn { margin-top:16px; padding:12px 16px; border:none; border-radius:12px; background:var(--accent); color:#052e1b; font-weight:800; cursor:pointer; }
+  .btn.secondary { background:#0b1022; color:#e5e7eb; border:1px solid #334155; }
+  .out { margin-top:18px; word-break: break-all; background:#0b1022; border:1px dashed #334155; padding:12px; border-radius:12px; }
+  .small { font-size:12px; color:#94a3b8; }
+  .center { text-align:center; }
+  .flex { display:flex; gap:10px; flex-wrap:wrap; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Setting Hadiah 🎁 → Buat Link</h1>
+      <p class="note">Masukkan data hadiah (nama akun & password). Tentukan <b>kata sandi pembuka</b>—hanya yang tahu sandi ini yang bisa membuka datanya.</p>
+
+      <label>Nama Akun (hadiah)</label>
+      <input id="accName" placeholder="mis. premium_user01" />
+
+      <label>Password Akun (hadiah)</label>
+      <input id="accPass" placeholder="mis. Abc!2345" />
+
+      <label>Catatan (opsional)</label>
+      <textarea id="note" placeholder="mis. berlaku 30 hari, login di example.com"></textarea>
+
+      <div class="row">
+        <div>
+          <label>Kata Sandi Pembuka</label>
+          <input id="unlockPass" type="password" placeholder="buat sandi untuk membuka hadiah" />
+        </div>
+        <div>
+          <label>Ulangi Kata Sandi Pembuka</label>
+          <input id="unlockPass2" type="password" placeholder="ulang sandi untuk verifikasi" />
+        </div>
+      </div>
+
+      <button class="btn" id="makeLink">Buat Link Terenkripsi</button>
+      <div id="result" class="out" style="display:none;"></div>
+      <div class="flex">
+        <button class="btn secondary" id="copyLink" style="display:none;">Salin Link</button>
+        <a id="testOpen" class="btn secondary" style="display:none;" target="_blank" rel="noopener">Buka (tes)</a>
+      </div>
+      <p class="small">Keamanan: data hadiah tidak disimpan server. Link berisi <i>payload</i> terenkripsi AES-GCM (Web Crypto) dengan sandi pembuka + PBKDF2. Bagikan sandinya secara terpisah.</p>
+    </div>
+  </div>
+
+<script>
+/** Util kecil **/
+const enc = new TextEncoder();
+const dec = new TextDecoder();
+
+/** PBKDF2 → kunci AES-GCM 256 bit */
+async function deriveKey(password, salt){
+  const baseKey = await crypto.subtle.importKey(
+    "raw", enc.encode(password), {name:"PBKDF2"}, false, ["deriveKey"]
+  );
+  return crypto.subtle.deriveKey(
+    {name:"PBKDF2", salt, iterations: 150000, hash: "SHA-256"},
+    baseKey,
+    {name:"AES-GCM", length:256},
+    false,
+    ["encrypt","decrypt"]
+  );
+}
+
+/** helper b64 */
+function b64e(buf){
+  return btoa(String.fromCharCode(...new Uint8Array(buf)));
+}
+function b64d(str){
+  return Uint8Array.from(atob(str), c => c.charCodeAt(0));
+}
+
+async function encryptPayload(obj, password){
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv   = crypto.getRandomValues(new Uint8Array(12));
+  const key  = await deriveKey(password, salt);
+  const data = enc.encode(JSON.stringify(obj));
+  const ct   = await crypto.subtle.encrypt({name:"AES-GCM", iv}, key, data);
+  return {
+    salt: b64e(salt),
+    iv:   b64e(iv),
+    ct:   b64e(ct)
+  };
+}
+
+function buildLink(payload){
+  // format: #v1:<salt>:<iv>:<ct>
+  const hash = `v1:${payload.salt}:${payload.iv}:${payload.ct}`;
+  // ganti "open.html" sesuai nama/host file kamu
+  return `open.html#${hash}`;
+}
+
+document.getElementById('makeLink').addEventListener('click', async () => {
+  const accName = document.getElementById('accName').value.trim();
+  const accPass = document.getElementById('accPass').value.trim();
+  const note    = document.getElementById('note').value.trim();
+  const up1     = document.getElementById('unlockPass').value;
+  const up2     = document.getElementById('unlockPass2').value;
+
+  if(!accName || !accPass){
+    alert('Nama Akun dan Password Akun hadiah wajib diisi.');
+    return;
+  }
+  if(!up1 || up1.length < 6){
+    alert('Kata Sandi Pembuka minimal 6 karakter.');
+    return;
+  }
+  if(up1 !== up2){
+    alert('Ulangan sandi tidak sama.');
+    return;
+  }
+
+  const gift = { accName, accPass, note, ts: Date.now() };
+  try{
+    const encrypted = await encryptPayload(gift, up1);
+    const link = buildLink(encrypted);
+    const res  = document.getElementById('result');
+    res.style.display = 'block';
+    res.textContent = link;
+
+    const copyBtn = document.getElementById('copyLink');
+    copyBtn.style.display = 'inline-block';
+    copyBtn.onclick = async () => {
+      try{ await navigator.clipboard.writeText(link); copyBtn.textContent = 'Tersalin ✅'; setTimeout(()=>copyBtn.textContent='Salin Link', 1200);}catch(e){ alert('Gagal menyalin.'); }
+    };
+
+    const test = document.getElementById('testOpen');
+    test.style.display = 'inline-block';
+    test.href = link;
+  }catch(e){
+    console.error(e);
+    alert('Gagal membuat link.');
+  }
+});
+</script>
+</body>
+</html>
