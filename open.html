@@ -3,82 +3,61 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Buka Hadiah 🎁</title>
+<title>Buka Hadiah</title>
 <style>
   :root { --bg:#0f172a; --card:#111827; --txt:#e5e7eb; --accent:#22c55e; }
-  body { font-family: system-ui; background:linear-gradient(135deg,#0b1022,#0f172a 20%,#0b132e); color:var(--txt); margin:0; padding:24px; }
+  body { font-family: system-ui, sans-serif; background:linear-gradient(135deg,#0b1022,#0f172a 20%,#0b132e); color:var(--txt); margin:0; padding:24px; }
   .wrap { max-width: 720px; margin: 0 auto; }
-  .card { background: var(--card); border:1px solid #1f2937; border-radius:18px; padding:20px; box-shadow: 0 10px 30px rgba(0,0,0,.25);}
-  h1 { margin:0 0 12px; font-size: 22px; }
+  .card { background: var(--card); border:1px solid #1f2937; border-radius:18px; padding:20px; }
   input { width:100%; padding:12px 14px; border-radius:12px; border:1px solid #334155; background:#0b1022; color:var(--txt); outline:none; }
   .btn { margin-top:16px; padding:12px 16px; border:none; border-radius:12px; background:var(--accent); color:#052e1b; font-weight:800; cursor:pointer; }
-  #result div { margin-bottom:8px; }
-  #noteBox { margin-top:12px; padding:10px; background:#1e293b; border-radius:8px; font-size:16px; }
+  a { color:#38bdf8; }
+  .copyBtn { margin-left:8px; padding:4px 8px; font-size:12px; border:none; border-radius:6px; background:#334155; color:var(--txt); cursor:pointer; }
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <h1>Buka Hadiah 🎁</h1>
-      <input id="pass" type="password" placeholder="Masukkan kata sandi pembuka" />
-      <button class="btn" id="openBtn">Buka Hadiah</button>
+<div class="wrap">
+  <div class="card">
+    <h1>Buka Hadiah 🎁</h1>
+    <input id="pass" type="password" placeholder="Masukkan kata sandi pembuka" />
+    <button class="btn" id="openBtn">Buka</button>
 
-      <div id="result" style="display:none;">
-        <div>
-          <b>Nama Akun:</b> <span id="accName"></span>
-          <button onclick="copyText('accName')">Salin</button>
-        </div>
-        <div>
-          <b>Password:</b> <span id="accPass"></span>
-          <button onclick="copyText('accPass')">Salin</button>
-        </div>
-        <div id="noteBox">
-          <b>Catatan:</b> <a id="noteLink" target="_blank" style="color:#38bdf8; text-decoration:underline;"></a>
-        </div>
-        <small>Dibuat: <span id="createdAt"></span></small>
-      </div>
+    <div id="result" style="display:none; margin-top:20px;">
+      <div><b>Nama Akun:</b> <span id="accName"></span> <button class="copyBtn" onclick="copyText('accName')">Salin</button></div>
+      <div><b>Password:</b> <span id="accPass"></span> <button class="copyBtn" onclick="copyText('accPass')">Salin</button></div>
+      <div style="margin-top:10px;"><b>🎁 Link Hadiah:</b> <a id="giftLink" href="" target="_blank"></a></div>
+      <div style="margin-top:6px;"><b>Catatan:</b> <span id="noteText"></span></div>
+      <small>Dibuat: <span id="createdAt"></span></small>
     </div>
   </div>
+</div>
 
 <script>
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 
-function b64d(str){
-  return Uint8Array.from(atob(str), c => c.charCodeAt(0));
-}
-
 async function deriveKey(password, salt){
-  const baseKey = await crypto.subtle.importKey(
-    "raw", enc.encode(password), {name:"PBKDF2"}, false, ["deriveKey"]
-  );
-  return crypto.subtle.deriveKey(
-    {name:"PBKDF2", salt, iterations:150000, hash:"SHA-256"},
-    baseKey,
-    {name:"AES-GCM", length:256},
-    false,
-    ["encrypt","decrypt"]
-  );
+  const baseKey = await crypto.subtle.importKey("raw", enc.encode(password), {name:"PBKDF2"}, false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2", salt, iterations:150000, hash:"SHA-256"}, baseKey, {name:"AES-GCM", length:256}, false, ["decrypt"]);
 }
-
-function parseHash(){
-  const h = location.hash.slice(1);
-  const [ver,salt,iv,ct] = h.split(':');
-  if(ver!=="v1") throw new Error("Versi tidak cocok");
-  return {salt,iv,ct};
-}
+function b64d(str){ return Uint8Array.from(atob(str), c => c.charCodeAt(0)); }
 
 async function decryptPayload(payload, password){
-  const key = await deriveKey(password, b64d(payload.salt));
-  const data = await crypto.subtle.decrypt({name:"AES-GCM", iv:b64d(payload.iv)}, key, b64d(payload.ct));
-  return JSON.parse(dec.decode(data));
+  const salt = b64d(payload.salt);
+  const iv   = b64d(payload.iv);
+  const key  = await deriveKey(password, salt);
+  const ct   = b64d(payload.ct);
+  const plain = await crypto.subtle.decrypt({name:"AES-GCM", iv}, key, ct);
+  return JSON.parse(dec.decode(plain));
 }
-
+function parseHash(){
+  const h = location.hash.slice(1).split(':');
+  if(h.length!==4 || h[0]!=='v1') throw new Error('Format hash salah');
+  return { salt:h[1], iv:h[2], ct:h[3] };
+}
 function copyText(id){
   const text = document.getElementById(id).textContent;
-  navigator.clipboard.writeText(text).then(()=>{
-    alert('Tersalin: ' + text);
-  });
+  navigator.clipboard.writeText(text).then(()=>alert('Tersalin: '+text));
 }
 
 document.getElementById('openBtn').onclick = async () => {
@@ -89,15 +68,20 @@ document.getElementById('openBtn').onclick = async () => {
 
     document.getElementById('accName').textContent = data.accName;
     document.getElementById('accPass').textContent = data.accPass;
-    document.getElementById('noteLink').textContent = data.note;
-    document.getElementById('noteLink').href = data.note;
-    document.getElementById('createdAt').textContent = new Date(data.ts).toLocaleString();
 
+    // Link hadiah
+    const linkHadiah = document.getElementById('giftLink');
+    linkHadiah.textContent = data.note;
+    linkHadiah.href = data.note;
+    linkHadiah.style.display = 'inline';
+
+    // Catatan
+    document.getElementById('noteText').textContent = data.note;
+    document.getElementById('createdAt').textContent = new Date(data.ts).toLocaleString();
     document.getElementById('result').style.display = 'block';
 
-    setTimeout(() => {
-      document.getElementById('noteBox')?.remove();
-    }, 15000);
+    // Hilangkan link setelah 15 detik
+    setTimeout(() => { linkHadiah.remove(); }, 15000);
 
   } catch(e) {
     alert('Gagal membuka hadiah. Kata sandi salah atau data rusak.');
