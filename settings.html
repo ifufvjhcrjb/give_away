@@ -78,6 +78,9 @@ async function deriveKey(password, salt){
 function b64e(buf){
   return btoa(String.fromCharCode(...new Uint8Array(buf)));
 }
+function b64d(str){
+  return Uint8Array.from(atob(str), c => c.charCodeAt(0));
+}
 
 async function encryptPayload(obj, password){
   const salt = crypto.getRandomValues(new Uint8Array(16));
@@ -94,17 +97,9 @@ async function encryptPayload(obj, password){
 
 function buildLink(payload){
   const hash = `v1:${payload.salt}:${payload.iv}:${payload.ct}`;
-  return `open.html#${hash}`;
-}
-
-async function shorten(url) {
-  try {
-    const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`);
-    return await res.text();
-  } catch (err) {
-    console.error(err);
-    return url; // fallback kalau gagal
-  }
+  let baseUrl = window.location.href;
+  baseUrl = baseUrl.replace(/[^\/?#]+$/, 'open.html'); // otomatis ganti jadi open.html
+  return `${baseUrl}#${hash}`;
 }
 
 document.getElementById('makeLink').addEventListener('click', async () => {
@@ -131,22 +126,19 @@ document.getElementById('makeLink').addEventListener('click', async () => {
   try{
     const encrypted = await encryptPayload(gift, up1);
     const link = buildLink(encrypted);
-
-    const shortLink = await shorten(link);
-
     const res  = document.getElementById('result');
     res.style.display = 'block';
-    res.textContent = shortLink;
+    res.textContent = link;
 
     const copyBtn = document.getElementById('copyLink');
     copyBtn.style.display = 'inline-block';
     copyBtn.onclick = async () => {
-      try{ await navigator.clipboard.writeText(shortLink); copyBtn.textContent = 'Tersalin ✅'; setTimeout(()=>copyBtn.textContent='Salin Link', 1200);}catch(e){ alert('Gagal menyalin.'); }
+      try{ await navigator.clipboard.writeText(link); copyBtn.textContent = 'Tersalin ✅'; setTimeout(()=>copyBtn.textContent='Salin Link', 1200);}catch(e){ alert('Gagal menyalin.'); }
     };
 
     const test = document.getElementById('testOpen');
     test.style.display = 'inline-block';
-    test.href = shortLink;
+    test.href = link;
   }catch(e){
     console.error(e);
     alert('Gagal membuat link.');
