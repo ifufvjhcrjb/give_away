@@ -1,116 +1,414 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin - Bagi Hadiah 17 Agustus</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #ff0000, #ffffff);
-      color: #222;
-      margin: 0;
-      padding: 20px;
-      text-align: center;
-    }
-    h1 {
-      color: #d10000;
-    }
-    .login-box, .admin-box {
-      background: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-      max-width: 400px;
-      margin: 20px auto;
-    }
-    input {
-      width: 90%;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background: #d10000;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      margin-top: 10px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #a00000;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    li {
-      background: #f4f4f4;
-      margin: 5px 0;
-      padding: 10px;
-      border-radius: 6px;
-    }
-    .winner {
-      background: gold;
-      font-weight: bold;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Admin Panel — Giveaway 17 Agustus</title>
+<style>
+  :root{--bg:#071022;--card:#0f1720;--acc:#c1121f;--glass:rgba(255,255,255,0.03);--radius:12px}
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#071225,#05101a);font-family:Inter,system-ui,Arial;color:#e6eef3;padding:18px}
+  .wrap{max-width:1150px;margin:0 auto}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  h1{margin:0;font-size:20px}
+  .sub{color:#9fb0c1;font-size:13px}
+  .grid{display:grid;grid-template-columns:1fr 360px;gap:18px}
+  .card{background:linear-gradient(180deg,#0f1720,#0b1117);border-radius:var(--radius);padding:14px;border:1px solid rgba(255,255,255,0.03)}
+  input,textarea,select{background:transparent;border:1px solid var(--glass);padding:10px;border-radius:10px;color:#e6eef3;width:100%}
+  button{background:var(--acc);border:none;color:white;padding:10px 12px;border-radius:10px;cursor:pointer}
+  .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:#cfe;cursor:pointer}
+  .list{max-height:360px;overflow:auto;padding:6px;border-radius:8px;border:1px dashed rgba(255,255,255,0.03)}
+  .item{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;background:linear-gradient(90deg,rgba(255,255,255,0.02),transparent);margin-bottom:8px}
+  .small{font-size:13px;color:#9fb0c1}
+  .danger{background:#a00}
+  .flex{display:flex;gap:8px}
+  .center{display:flex;align-items:center;justify-content:center}
+  .stat{display:flex;gap:8px;margin-bottom:12px}
+  .stat > div{flex:1;padding:12px;border-radius:10px;background:linear-gradient(180deg,#081425,#07101a);text-align:center}
+</style>
 </head>
 <body>
-  <h1>Admin Panel 🎉</h1>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Admin Panel — Giveaway 17 Agustus</h1>
+      <div class="sub">Kelola hadiah, peserta, dan undi pemenang. Hasil tersimpan di localStorage.</div>
+    </div>
+    <div class="center">
+      <div style="margin-right:12px" class="small">Mode: Admin</div>
+      <button id="exportBtn" class="btn-ghost">Ekspor CSV</button>
+    </div>
+  </header>
 
-  <div class="login-box" id="loginBox">
-    <h2>Login Admin</h2>
-    <input type="password" id="adminPass" placeholder="Masukkan Password">
-    <button onclick="login()">Login</button>
+  <div class="grid">
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Tambah / Edit Hadiah</h3>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input id="titleInput" placeholder="Judul hadiah (contoh: 2 ADP)" />
+          <input id="imgInput" placeholder="URL gambar (opsional)" />
+        </div>
+        <textarea id="descInput" rows="3" placeholder="Deskripsi singkat hadiah"></textarea>
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <button id="addPrizeBtn">Tambah Hadiah</button>
+          <button id="importSampleBtn" class="btn-ghost">Import Sample</button>
+          <button id="clearPrizesBtn" class="btn-ghost">Hapus Semua</button>
+        </div>
+
+        <h4 style="margin-top:12px">Daftar Hadiah</h4>
+        <div class="list" id="prizeList"></div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <h3 style="margin-top:0">Peserta</h3>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input id="participantName" placeholder="Nama peserta baru" />
+          <button id="addParticipantBtn">Tambah</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button id="shuffleBtn" class="btn-ghost">Acak Daftar</button>
+          <button id="clearParticipantsBtn" class="btn-ghost">Hapus Semua</button>
+        </div>
+        <div class="list" id="participantList"></div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <h3 style="margin-top:0">Undi & Riwayat Pemenang</h3>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <select id="selectPrize"></select>
+          <button id="drawBtn" style="flex:0 0 160px">Undi Pemenang</button>
+        </div>
+        <div class="small" style="margin-bottom:8px">Pemenang yang diundi akan disimpan di riwayat dan dapat diekspor.</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <button id="draw3Btn" class="btn-ghost">Undi 3 Pemenang</button>
+          <button id="resetWinnersBtn" class="btn-ghost">Reset Riwayat</button>
+        </div>
+        <div>
+          <h4 style="margin:6px 0">Riwayat Pemenang</h4>
+          <div class="list" id="winnerList"></div>
+        </div>
+      </div>
+    </div>
+
+    <aside>
+      <div class="card">
+        <h4 style="margin-top:0">Statistik</h4>
+        <div class="stat" style="margin-top:8px">
+          <div><div class="small">Total Hadiah</div><div id="statPrizes" style="font-weight:900">0</div></div>
+          <div><div class="small">Total Peserta</div><div id="statParticipants" style="font-weight:900">0</div></div>
+        </div>
+        <div style="margin-top:12px">
+          <h4 style="margin:6px 0">Aksi Cepat</h4>
+          <div style="display:flex;gap:8px">
+            <button id="exportWinnersBtn" class="btn-ghost">Ekspor Pemenang</button>
+            <button id="clearAllBtn" class="btn-ghost danger">Hapus Semua Local</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <h4 style="margin-top:0">Panduan Singkat</h4>
+        <ol class="small" style="padding-left:16px;color:#9fb0c1">
+          <li>Gunakan tombol "Undi Pemenang" untuk memilih pemenang satu hadiah.</li>
+          <li>Hasil tersimpan di localStorage agar index.html menampilkan riwayat.</li>
+          <li>Ekspor CSV sebagai bukti jika perlu.</li>
+        </ol>
+      </div>
+    </aside>
   </div>
+</div>
 
-  <div class="admin-box" id="adminBox" style="display:none;">
-    <h2>Daftar Peserta</h2>
-    <ul id="pesertaList"></ul>
-    <button onclick="pilihPemenang()">Pilih Pemenang 🎁</button>
-    <h3 id="winnerBox"></h3>
-  </div>
+<script>
+/* LocalStorage keys */
+const LS = { PRIZES: "give_prizes_v1", PARTICIPANTS: "give_participants_v1", WINNERS: "give_winners_v1" };
 
-  <script>
-    const ADMIN_PASSWORD = "kuro_kaii"; // ubah sesuai keinginan
+/* util */
+function uid(len=8){ return Math.random().toString(36).slice(2,2+len) }
+function load(k){ return JSON.parse(localStorage.getItem(k) || "[]") }
+function save(k,v){ localStorage.setItem(k, JSON.stringify(v)) }
 
-    function login() {
-      let pass = document.getElementById("adminPass").value;
-      if(pass === ADMIN_PASSWORD){
-        document.getElementById("loginBox").style.display = "none";
-        document.getElementById("adminBox").style.display = "block";
-        loadPeserta();
-      } else {
-        alert("Password salah!");
-      }
-    }
+/* Initialize default prizes if none */
+if(!localStorage.getItem(LS.PRIZES)){
+  const initial = [
+    { id: uid(6), title: "2 ADP", desc: "Hadiah: 2 ADP (paket)", img: null },
+    { id: uid(6), title: "1 ADP", desc: "Hadiah: 1 ADP", img: null },
+    { id: uid(6), title: "2 UNLI", desc: "Hadiah: 2 UNLI (paket)", img: null },
+    { id: uid(6), title: "1 UNLI", desc: "Hadiah: 1 UNLI", img: null }
+  ];
+  save(LS.PRIZES, initial);
+}
 
-    function loadPeserta(){
-      let peserta = JSON.parse(localStorage.getItem("peserta")) || [];
-      let list = document.getElementById("pesertaList");
-      list.innerHTML = "";
-      peserta.forEach((p, i) => {
-        let li = document.createElement("li");
-        li.textContent = (i+1) + ". " + p;
-        list.appendChild(li);
-      });
-    }
+/* Elements */
+const prizeListEl = document.getElementById("prizeList");
+const participantListEl = document.getElementById("participantList");
+const winnerListEl = document.getElementById("winnerList");
+const selectPrizeEl = document.getElementById("selectPrize");
 
-    function pilihPemenang(){
-      let peserta = JSON.parse(localStorage.getItem("peserta")) || [];
-      if(peserta.length === 0){
-        alert("Belum ada peserta!");
-        return;
-      }
-      let index = Math.floor(Math.random() * peserta.length);
-      let winner = peserta[index];
-      document.getElementById("winnerBox").innerHTML = 
-        "🎉 Pemenang adalah: <span class='winner'>" + winner + "</span>";
-    }
-  </script>
+function renderAll(){
+  renderPrizes();
+  renderParticipants();
+  renderWinners();
+  renderStats();
+}
+
+/* PRIZES */
+document.getElementById("addPrizeBtn").addEventListener("click", ()=>{
+  const title = document.getElementById("titleInput").value.trim();
+  const img = document.getElementById("imgInput").value.trim();
+  const desc = document.getElementById("descInput").value.trim();
+  if(!title){ alert("Masukkan judul hadiah"); return; }
+  const arr = load(LS.PRIZES);
+  arr.push({ id: uid(6), title, img: img || null, desc: desc || "" });
+  save(LS.PRIZES, arr);
+  document.getElementById("titleInput").value="";
+  document.getElementById("imgInput").value="";
+  document.getElementById("descInput").value="";
+  renderPrizes();
+});
+
+function renderPrizes(){
+  const arr = load(LS.PRIZES);
+  prizeListEl.innerHTML = "";
+  selectPrizeEl.innerHTML = "";
+  arr.forEach(p=>{
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `<div style="flex:1"><div style="font-weight:800">${p.title}</div><div class="small" style="color:#9fb0c1">${p.desc || ''}</div></div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button class="btn-ghost" data-id="${p.id}" data-act="edit">Edit</button>
+        <button class="btn-ghost" data-id="${p.id}" data-act="del">Hapus</button>
+      </div>`;
+    prizeListEl.appendChild(div);
+
+    const opt = document.createElement("option");
+    opt.value = p.id;
+    opt.textContent = p.title;
+    selectPrizeEl.appendChild(opt);
+  });
+  document.getElementById("statPrizes").textContent = arr.length;
+}
+
+/* Edit/delete prize */
+prizeListEl.addEventListener("click", (e)=>{
+  const btn = e.target.closest("button");
+  if(!btn) return;
+  const id = btn.dataset.id;
+  const act = btn.dataset.act;
+  let arr = load(LS.PRIZES);
+  if(act === "del"){
+    if(!confirm("Hapus hadiah ini?")) return;
+    arr = arr.filter(x=>x.id !== id);
+    save(LS.PRIZES, arr);
+    renderPrizes();
+    return;
+  }
+  if(act === "edit"){
+    const item = arr.find(x=>x.id === id);
+    if(!item) return;
+    const newTitle = prompt("Ubah judul:", item.title);
+    if(newTitle === null) return;
+    item.title = newTitle.trim() || item.title;
+    const newDesc = prompt("Ubah deskripsi:", item.desc || "");
+    if(newDesc !== null) item.desc = newDesc;
+    save(LS.PRIZES, arr);
+    renderPrizes();
+  }
+});
+
+/* import sample */
+document.getElementById("importSampleBtn").addEventListener("click", ()=>{
+  const sample = [
+    { id: uid(6), title: "2 ADP", desc: "Hadiah: 2 ADP (paket)", img:null },
+    { id: uid(6), title: "1 ADP", desc: "Hadiah: 1 ADP", img:null },
+    { id: uid(6), title: "2 UNLI", desc: "Hadiah: 2 UNLI (paket)", img:null },
+    { id: uid(6), title: "1 UNLI", desc: "Hadiah: 1 UNLI", img:null }
+  ];
+  save(LS.PRIZES, sample);
+  renderPrizes();
+});
+document.getElementById("clearPrizesBtn").addEventListener("click", ()=>{ if(confirm("Hapus semua hadiah?")){ save(LS.PRIZES,[]); renderPrizes(); } });
+
+/* PARTICIPANTS */
+document.getElementById("addParticipantBtn").addEventListener("click", ()=>{
+  const name = document.getElementById("participantName").value.trim();
+  if(!name){ alert("Masukkan nama peserta"); return; }
+  let arr = load(LS.PARTICIPANTS);
+  if(arr.some(x=>x.name.toLowerCase() === name.toLowerCase())){ alert("Nama sudah ada"); return; }
+  arr.push({ id: uid(6), name, ts: Date.now() });
+  save(LS.PARTICIPANTS, arr);
+  document.getElementById("participantName").value = "";
+  renderParticipants();
+});
+
+function renderParticipants(){
+  const arr = load(LS.PARTICIPANTS);
+  participantListEl.innerHTML = "";
+  if(arr.length === 0) participantListEl.innerHTML = `<div class="small">Belum ada peserta.</div>`;
+  arr.forEach(p=>{
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `<div style="flex:1"><div style="font-weight:800">${p.name}</div><div class="small" style="color:#9fb0c1">${new Date(p.ts).toLocaleString()}</div></div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button class="btn-ghost" data-id="${p.id}" data-act="del">Hapus</button>
+      </div>`;
+    participantListEl.appendChild(div);
+  });
+  document.getElementById("statParticipants").textContent = arr.length;
+}
+
+/* delete participant */
+participantListEl.addEventListener("click", (e)=>{
+  const btn = e.target.closest("button");
+  if(!btn) return;
+  const id = btn.dataset.id;
+  const act = btn.dataset.act;
+  if(act === "del"){
+    let arr = load(LS.PARTICIPANTS);
+    arr = arr.filter(x => x.id !== id);
+    save(LS.PARTICIPANTS, arr);
+    renderParticipants();
+  }
+});
+
+document.getElementById("shuffleBtn").addEventListener("click", ()=>{
+  let arr = load(LS.PARTICIPANTS);
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  save(LS.PARTICIPANTS, arr);
+  renderParticipants();
+});
+document.getElementById("clearParticipantsBtn").addEventListener("click", ()=>{ if(confirm("Hapus semua peserta?")){ save(LS.PARTICIPANTS,[]); renderParticipants(); } });
+
+/* WINNERS & DRAW */
+document.getElementById("drawBtn").addEventListener("click", ()=>{
+  const prizeId = selectPrizeEl.value;
+  const prize = load(LS.PRIZES).find(p => p.id === prizeId);
+  const parts = load(LS.PARTICIPANTS);
+  if(!prize){ alert("Pilih hadiah dulu"); return; }
+  if(parts.length === 0){ alert("Belum ada peserta"); return; }
+  const winner = parts[Math.floor(Math.random() * parts.length)];
+  const winners = load(LS.WINNERS);
+  winners.unshift({ id: uid(6), name: winner.name, prize: prize.title, ts: Date.now() });
+  save(LS.WINNERS, winners);
+  renderWinners();
+  // Notify other tabs via localStorage event
+  localStorage.setItem("give_last_pick", JSON.stringify({ name: winner.name, prize: prize.title, ts: Date.now() }));
+  alert("Pemenang: " + winner.name + " — " + prize.title);
+});
+
+document.getElementById("draw3Btn").addEventListener("click", ()=>{
+  const prizeId = selectPrizeEl.value;
+  const prize = load(LS.PRIZES).find(p => p.id === prizeId);
+  const parts = load(LS.PARTICIPANTS);
+  if(!prize){ alert("Pilih hadiah dulu"); return; }
+  if(parts.length === 0){ alert("Belum ada peserta"); return; }
+  const winners = load(LS.WINNERS);
+  const picks = new Set();
+  while(picks.size < Math.min(3, parts.length)){
+    const w = parts[Math.floor(Math.random() * parts.length)];
+    picks.add(w.name);
+  }
+  Array.from(picks).forEach(name=>{
+    winners.unshift({ id: uid(6), name, prize: prize.title, ts: Date.now() });
+  });
+  save(LS.WINNERS, winners);
+  renderWinners();
+  localStorage.setItem("give_last_pick", JSON.stringify({ multi: true, prize: prize.title, ts: Date.now() }));
+  alert("Undi 3 pemenang selesai.");
+});
+
+function renderWinners(){
+  const arr = load(LS.WINNERS);
+  winnerListEl.innerHTML = "";
+  if(arr.length === 0) winnerListEl.innerHTML = `<div class="small">Belum ada pemenang.</div>`;
+  arr.forEach(w=>{
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `<div style="flex:1"><div style="font-weight:800">${w.name}</div><div class="small" style="color:#9fb0c1">${w.prize} — ${new Date(w.ts).toLocaleString()}</div></div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button class="btn-ghost" data-id="${w.id}" data-act="del">Hapus</button>
+      </div>`;
+    winnerListEl.appendChild(div);
+  });
+}
+
+/* delete winner */
+winnerListEl.addEventListener("click", (e)=>{
+  const btn = e.target.closest("button");
+  if(!btn) return;
+  const id = btn.dataset.id;
+  const act = btn.dataset.act;
+  if(act === "del"){
+    let arr = load(LS.WINNERS);
+    arr = arr.filter(x => x.id !== id);
+    save(LS.WINNERS, arr);
+    renderWinners();
+  }
+});
+document.getElementById("resetWinnersBtn").addEventListener("click", ()=>{ if(confirm("Reset riwayat pemenang?")){ save(LS.WINNERS,[]); renderWinners(); } });
+
+/* Export CSV functions */
+function toCSV(rows){ return rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n") }
+document.getElementById("exportBtn").addEventListener("click", ()=>{
+  const prizes = load(LS.PRIZES);
+  const rows = [["id","title","desc","img"], ...prizes.map(p=>[p.id,p.title,p.desc,p.img||""])];
+  const csv = toCSV(rows);
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "prizes.csv"; a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById("exportWinnersBtn").addEventListener("click", ()=>{
+  const winners = load(LS.WINNERS);
+  const rows = [["id","name","prize","ts"], ...winners.map(w=>[w.id,w.name,w.prize,new Date(w.ts).toLocaleString()])];
+  const csv = toCSV(rows);
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "winners.csv"; a.click();
+  URL.revokeObjectURL(url);
+});
+
+/* Clear all local data */
+document.getElementById("clearAllBtn").addEventListener("click", ()=>{
+  if(!confirm("Hapus semua data local (hadiah, peserta, pemenang)?")) return;
+  localStorage.removeItem(LS.PRIZES);
+  localStorage.removeItem(LS.PARTICIPANTS);
+  localStorage.removeItem(LS.WINNERS);
+  renderAll();
+});
+
+/* Listen for storage events so other tabs (index.html) can react */
+addEventListener("storage", (e)=>{
+  if([LS.PRIZES, LS.PARTICIPANTS, LS.WINNERS].includes(e.key)){
+    renderAll();
+  }
+});
+
+/* Quick clear helpers */
+document.getElementById("clearPrizesBtn").addEventListener("click", ()=>{ if(confirm("Hapus semua hadiah?")){ save(LS.PRIZES,[]); renderPrizes(); } });
+document.getElementById("clearParticipantsBtn").addEventListener("click", ()=>{ if(confirm("Hapus semua peserta?")){ save(LS.PARTICIPANTS,[]); renderParticipants(); } });
+
+/* Render stats */
+function renderStats(){
+  document.getElementById("statPrizes").textContent = load(LS.PRIZES).length;
+  document.getElementById("statParticipants").textContent = load(LS.PARTICIPANTS).length;
+}
+
+/* Boot */
+renderAll();
+
+/* small helper to keep UI in sync after initial load */
+function renderAll(){
+  renderPrizes();
+  renderParticipants();
+  renderWinners();
+  renderStats();
+}
+renderAll();
+</script>
 </body>
 </html>
