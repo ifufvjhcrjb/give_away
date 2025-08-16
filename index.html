@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Giveaway 17 Agustus — Peserta</title>
+  <style>
+    body {font-family: Arial, sans-serif; background:#081226; color:white; margin:0; padding:20px;}
+    h1 {color:#ff5c5c;}
+    .card {background:rgba(255,255,255,0.05); padding:16px; border-radius:10px; margin-bottom:20px;}
+    input,select,button {width:100%; padding:10px; margin:5px 0; border-radius:6px; border:none;}
+    button {cursor:pointer; background:#ff5c5c; color:white; font-weight:bold;}
+    .entries {max-height:250px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:8px; border-radius:8px;}
+    .small {font-size:13px; opacity:.8;}
+  </style>
+</head>
+<body>
+  <h1>🇮🇩 Giveaway 17 Agustus</h1>
+  <div class="card">
+    <h2>Hitung Mundur</h2>
+    <div id="countdown"></div>
+  </div>
+
+  <div class="card">
+    <h2>Daftar Giveaway</h2>
+    <form id="entryForm">
+      <input id="name" placeholder="Nama lengkap" required>
+      <input id="contact" placeholder="No. WhatsApp / Username" required>
+      <select id="how">
+        <option value="follow_ig">Follow Instagram</option>
+        <option value="share_story">Share ke Story</option>
+        <option value="like_post">Like & Tag 2 Teman</option>
+      </select>
+      <button type="submit">Ikut Sekarang</button>
+    </form>
+    <p class="small">Total peserta: <span id="total">0</span></p>
+  </div>
+
+  <div class="card">
+    <h2>Peserta</h2>
+    <div id="entries" class="entries"></div>
+  </div>
+
+  <p class="small">Admin login di <a href="admin.html">halaman admin</a></p>
+
+<script>
+  function qs(id){return document.getElementById(id)}
+
+  // countdown
+  function nextAug17(){
+    const now = new Date();
+    let target = new Date(now.getFullYear(),7,17,0,0,0);
+    if(target <= now) target.setFullYear(target.getFullYear()+1);
+    return target;
+  }
+  const target = nextAug17();
+  function tick(){
+    const now = new Date();
+    const diff = target - now;
+    const d = Math.floor(diff/86400000);
+    const h = Math.floor(diff%86400000/3600000);
+    const m = Math.floor(diff%3600000/60000);
+    const s = Math.floor(diff%60000/1000);
+    qs('countdown').textContent = `${d} Hari ${h} Jam ${m} Menit ${s} Detik`;
+  }
+  setInterval(tick,1000); tick();
+
+  // data
+  function load(){return JSON.parse(localStorage.getItem('giveaway_entries')||'[]')}
+  function save(arr){localStorage.setItem('giveaway_entries',JSON.stringify(arr))}
+
+  function render(){
+    const arr=load();
+    qs('entries').innerHTML=arr.map(e=>`<div>${e.name} — <span class="small">${e.contact}</span></div>`).join('')||'<div class="small">Belum ada peserta</div>';
+    qs('total').textContent=arr.length;
+  }
+
+  qs('entryForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const name=qs('name').value.trim();
+    const contact=qs('contact').value.trim();
+    const how=qs('how').value;
+    let arr=load();
+    if(arr.some(x=>x.contact.toLowerCase()===contact.toLowerCase())) return alert('Kontak sudah terdaftar!');
+    arr.push({name,contact,how,ts:Date.now()});
+    save(arr); render();
+    qs('entryForm').reset();
+  });
+
+  render();
+</script>
+</body>
+</html>
+
+
+---
+
+admin.html (untuk admin)
+
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin Giveaway 17 Agustus</title>
+  <style>
+    body {font-family: Arial, sans-serif; background:#0b1020; color:white; margin:0; padding:20px;}
+    h1 {color:#f6c84c;}
+    .card {background:rgba(255,255,255,0.05); padding:16px; border-radius:10px; margin-bottom:20px;}
+    input,button {width:100%; padding:10px; margin:5px 0; border-radius:6px; border:none;}
+    button {cursor:pointer; background:#f6c84c; color:#0b1020; font-weight:bold;}
+    .entries {max-height:250px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:8px; border-radius:8px;}
+    .winner {font-size:20px; color:#ff5c5c; font-weight:bold;}
+  </style>
+</head>
+<body>
+  <h1>👑 Admin Giveaway 17 Agustus</h1>
+
+  <div class="card">
+    <h2>Login Admin</h2>
+    <input type="password" id="adminPass" placeholder="Kata sandi admin">
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div id="panel" style="display:none">
+    <div class="card">
+      <h2>Peserta</h2>
+      <div id="entries" class="entries"></div>
+      <button onclick="exportCSV()">Unduh CSV</button>
+      <button onclick="clearData()">Bersihkan Data</button>
+    </div>
+
+    <div class="card">
+      <h2>Pilih Pemenang</h2>
+      <button onclick="pickWinner()">Pilih Sekarang</button>
+      <div id="winnerBox"></div>
+    </div>
+  </div>
+
+<script>
+  const ADMIN_PASSWORD='admin2025';
+  function qs(id){return document.getElementById(id)}
+
+  function load(){return JSON.parse(localStorage.getItem('giveaway_entries')||'[]')}
+  function save(arr){localStorage.setItem('giveaway_entries',JSON.stringify(arr))}
+
+  function login(){
+    if(qs('adminPass').value===ADMIN_PASSWORD){
+      qs('panel').style.display='block';
+      render();
+    } else alert('Password salah');
+  }
+
+  function render(){
+    const arr=load();
+    qs('entries').innerHTML=arr.map(e=>`<div>${e.name} — <span>${e.contact}</span></div>`).join('')||'<div>Belum ada peserta</div>';
+  }
+
+  function exportCSV(){
+    const arr=load(); if(!arr.length) return alert('Belum ada peserta');
+    const csv=['Nama,Kontak,Metode,Tanggal',...arr.map(a=>`${a.name},${a.contact},${a.how},${new Date(a.ts).toLocaleString()}`)].join('\n');
+    const blob=new Blob([csv],{type:'text/csv'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download='peserta.csv'; a.click(); URL.revokeObjectURL(url);
+  }
+
+  function clearData(){
+    if(confirm('Yakin hapus semua peserta?')){localStorage.removeItem('giveaway_entries'); render();}
+  }
+
+  function pickWinner(){
+    const arr=load(); if(!arr.length) return alert('Tidak ada peserta');
+    const w=arr[Math.floor(Math.random()*arr.length)];
+    qs('winnerBox').innerHTML=`<p>Pemenang adalah:</p><div class='winner'>${w.name} — ${w.contact}</div>`;
+  }
+</script>
+</body>
+</html>
+
+
+---
+
+Jadi:
+
+Peserta buka index.html untuk daftar.
+
+Admin buka admin.html untuk kelola & pilih pemenang.
+
+Data otomatis sinkron karena pakai localStorage yang sama di browser.
+
+
+Mau aku tambahkan opsi edit data peserta sendiri (misalnya lewat link edit atau kode unik) biar member bisa ubah datanya? Atau cukup admin saja yang bisa hapus/edit? ❤️
+
