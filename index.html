@@ -1,159 +1,413 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bagi-Bagi Hadiah 17 Agustus 🎉</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, red, white);
-      margin: 0;
-      padding: 0;
-      text-align: center;
-      color: #333;
-    }
-    header {
-      background: #d32f2f;
-      color: white;
-      padding: 15px;
-      font-size: 1.5em;
-      font-weight: bold;
-    }
-    .container {
-      max-width: 500px;
-      margin: 30px auto;
-      background: white;
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    }
-    input, button {
-      padding: 10px;
-      margin: 10px 0;
-      width: 90%;
-      font-size: 1em;
-    }
-    button {
-      cursor: pointer;
-      background: #d32f2f;
-      border: none;
-      color: white;
-      border-radius: 5px;
-      transition: 0.3s;
-    }
-    button:hover {
-      background: #b71c1c;
-    }
-    #adminPanel {
-      display: none;
-      margin-top: 20px;
-      text-align: left;
-    }
-    #participantsList {
-      margin: 15px 0;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background: #f9f9f9;
-      max-height: 200px;
-      overflow-y: auto;
-    }
-    #winner {
-      font-size: 1.2em;
-      color: green;
-      font-weight: bold;
-      margin-top: 15px;
-    }
-    .admin-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: black;
-      font-size: 0.9em;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Giveaway 17 Agustus — Ikut & Tunggu Pengumuman</title>
+<style>
+  :root{
+    --merah:#c1121f;
+    --putih:#ffffff;
+    --bg:#0f1720;
+    --card:#fff;
+    --glass: rgba(255,255,255,0.06);
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    background: linear-gradient(180deg,#fff7f7,#fff);
+    color:#0b1b2b;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    padding:24px;
+    display:flex;
+    justify-content:center;
+  }
+  .container{
+    width:100%;
+    max-width:1150px;
+    display:grid;
+    grid-template-columns: 1fr 360px;
+    gap:20px;
+    align-items:start;
+  }
+  header{
+    grid-column:1 / -1;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:6px;
+  }
+  .logo{
+    display:flex;
+    gap:12px;
+    align-items:center;
+  }
+  .badge{
+    width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--merah),#ff7a7a);color:white;display:grid;place-items:center;font-weight:800;box-shadow:0 10px 30px rgba(193,18,31,0.16);
+  }
+  h1{margin:0;font-size:20px}
+  .sub{color:#334; font-size:13px}
+
+  .card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:0 10px 30px rgba(12,20,30,0.06)}
+  .hero{display:flex;gap:16px}
+  .hero-left{flex:1}
+  .hero-right{width:240px}
+  .countdown{display:flex;gap:10px;margin-top:12px}
+  .chip{background:var(--glass);padding:10px 12px;border-radius:10px;min-width:64px;text-align:center;font-weight:700}
+
+  .hadiah-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:16px}
+  .hadiah-item{border-radius:12px;padding:12px;background:linear-gradient(180deg,#fff,#fff8f8);border:1px solid rgba(0,0,0,0.03);cursor:pointer;transition:transform .22s,box-shadow .22s;overflow:hidden;position:relative}
+  .hadiah-item:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(10,20,40,0.06)}
+  .hadiah-item img{width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px}
+  .hadiah-title{font-weight:800}
+  .hadiah-desc{color:#556;font-size:13px;margin-top:6px}
+
+  .panel{display:flex;gap:8px;margin-top:12px}
+  input[type="text"]{flex:1;padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.06)}
+  .btn{background:linear-gradient(180deg,var(--merah),#b30f16);color:white;padding:10px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:800}
+
+  .sidebar{position:sticky;top:24px}
+  .stat{display:flex;gap:8px;margin-bottom:12px}
+  .stat > div{flex:1;padding:12px;border-radius:10px;background:linear-gradient(180deg,#fff,#fff8f3);text-align:center}
+  .small{font-size:13px;color:#6b7780}
+
+  .modal-back{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:none;place-items:center;z-index:9999}
+  .modal{background:white;border-radius:12px;padding:14px;max-width:720px;width:calc(100% - 40px)}
+  .close{float:right;border:none;background:transparent;font-size:18px;cursor:pointer}
+
+  #fireworks{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:30;mix-blend-mode:screen}
+
+  .history{max-height:200px;overflow:auto;padding:8px;border-radius:8px;background:linear-gradient(180deg,#fff,#fff8f3);border:1px solid rgba(0,0,0,0.03)}
+  .link-admin{display:inline-block;margin-top:8px;padding:8px 10px;border-radius:10px;background:transparent;border:2px dashed rgba(193,18,31,0.15);color:var(--merah);text-decoration:none;font-weight:700}
+  @media (max-width:940px){
+    .container{grid-template-columns:1fr}
+    .sidebar{position:static}
+    .hero-right{display:none}
+  }
+</style>
 </head>
 <body>
+<canvas id="fireworks"></canvas>
+
+<div class="container">
   <header>
-    🎉 Bagi-Bagi Hadiah 17 Agustus 🎉
+    <div class="logo">
+      <div class="badge">17</div>
+      <div>
+        <h1>Giveaway 17 Agustus</h1>
+        <div class="sub">Merdeka Berbagi — Bergabung sekarang & tunggu pengumuman pemenang</div>
+      </div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:13px;color:#334">Halo, sayang 👋</div>
+      <div style="font-size:12px;color:#99a">Tanggal: 17 Agustus</div>
+    </div>
   </header>
 
-  <button class="admin-btn" onclick="showAdminLogin()">Login Admin</button>
+  <!-- MAIN -->
+  <main>
+    <section class="card">
+      <div class="hero">
+        <div class="hero-left">
+          <p style="margin:0;font-weight:900;font-size:18px">🎆 Super Giveaway — 17 Agustus</p>
+          <p class="small">Ikut undian resmi. Hanya admin yang boleh memilih pemenang.</p>
 
-  <div class="container" id="userPanel">
-    <h2>Ikut Undian Hadiah!</h2>
-    <p>Masukkan nama kamu untuk berpartisipasi.</p>
-    <input type="text" id="username" placeholder="Nama kamu...">
-    <button onclick="join()">Ikut Undian</button>
+          <div class="countdown" aria-hidden>
+            <div class="chip"><span id="cd-days">--</span><br><small style="font-weight:400">Hari</small></div>
+            <div class="chip"><span id="cd-hours">--</span><br><small style="font-weight:400">Jam</small></div>
+            <div class="chip"><span id="cd-mins">--</span><br><small style="font-weight:400">Menit</small></div>
+            <div class="chip"><span id="cd-secs">--</span><br><small style="font-weight:400">Detik</small></div>
+          </div>
+
+          <div class="panel">
+            <input id="nameInput" placeholder="Masukkan nama/username (unik)" />
+            <button class="btn" id="joinBtn">Ikut Sekarang</button>
+          </div>
+
+          <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+            <button class="btn" id="myEntryBtn" style="background:linear-gradient(180deg,#666,#444)">Cek Entry Saya</button>
+            <a class="link-admin" href="admin.html" target="_blank">Masuk Admin</a>
+          </div>
+
+          <div style="margin-top:14px">
+            <h3 style="margin:0 0 8px 0">Daftar Hadiah</h3>
+            <div class="hadiah-grid" id="prizeGrid"></div>
+          </div>
+
+        </div>
+
+        <aside class="hero-right">
+          <div class="card" style="padding:12px;margin-bottom:12px">
+            <div style="font-weight:900">Status Undian</div>
+            <div class="stat" style="margin-top:10px">
+              <div><div class="small">Peserta</div><div id="totalParticipants" style="font-weight:900">0</div></div>
+              <div><div class="small">Jenis Hadiah</div><div id="totalPrizes" style="font-weight:900">0</div></div>
+            </div>
+
+            <div style="margin-top:8px"><div class="small">Riwayat pemenang</div>
+              <div class="history" id="historyArea"><div style="color:#889;padding:8px">Belum ada pemenang.</div></div>
+            </div>
+          </div>
+
+          <div class="card" style="padding:12px">
+            <div class="small" style="margin-bottom:6px">Aturan singkat</div>
+            <ol class="small" style="padding-left:18px;margin:0;color:#556">
+              <li>Nama harus unik.</li>
+              <li>Satu nama = 1 entry.</li>
+              <li>Admin akan mengundi pemenang pada tanggal 17 Agustus.</li>
+            </ol>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- modal hadiah -->
+<div class="modal-back" id="modal" aria-hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="close" id="closeModal">✕</button>
+    <h3 id="modalTitle">Detail Hadiah</h3>
+    <div id="modalBody"></div>
   </div>
+</div>
 
-  <div class="container" id="adminLogin" style="display:none;">
-    <h2>Login Admin</h2>
-    <input type="password" id="adminPass" placeholder="Password admin">
-    <button onclick="loginAdmin()">Masuk</button>
-    <button onclick="cancelLogin()">Batal</button>
-  </div>
+<script>
+/* LocalStorage keys */
+const LS = { PRIZES: "give_prizes_v1", PARTICIPANTS: "give_participants_v1", WINNERS: "give_winners_v1" };
 
-  <div class="container" id="adminPanel">
-    <h2>Panel Admin</h2>
-    <p><b>Daftar Peserta:</b></p>
-    <div id="participantsList"></div>
-    <button onclick="pickWinner()">Pilih Pemenang 🎁</button>
-    <p id="winner"></p>
-  </div>
+/* Utility */
+function uid(len=8){ return Math.random().toString(36).slice(2,2+len) }
+function load(k){ return JSON.parse(localStorage.getItem(k) || "[]") }
+function save(k,v){ localStorage.setItem(k, JSON.stringify(v)) }
 
-  <script>
-    let participants = [];
-    const adminPassword = "merdeka45"; // ubah password admin di sini
+/* Initialize prizes to the requested set if not present */
+if(!localStorage.getItem(LS.PRIZES)){
+  const initial = [
+    { id: uid(6), title: "2 ADP", desc: "Hadiah: 2 ADP (paket)", img: null },
+    { id: uid(6), title: "1 ADP", desc: "Hadiah: 1 ADP", img: null },
+    { id: uid(6), title: "2 UNLI", desc: "Hadiah: 2 UNLI (paket)", img: null },
+    { id: uid(6), title: "1 UNLI", desc: "Hadiah: 1 UNLI", img: null }
+  ];
+  save(LS.PRIZES, initial);
+}
 
-    function join() {
-      const name = document.getElementById("username").value.trim();
-      if(name === "") {
-        alert("Nama tidak boleh kosong!");
-        return;
+/* Render prizes */
+const prizeGrid = document.getElementById("prizeGrid");
+function renderPrizes(){
+  const arr = load(LS.PRIZES);
+  prizeGrid.innerHTML = "";
+  arr.forEach(p=>{
+    const el = document.createElement("div");
+    el.className = "hadiah-item";
+    el.dataset.id = p.id;
+    el.innerHTML = `
+      <img src="${p.img || 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400"><rect width="100%" height="100%" fill="#fff5f5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="28" fill="#b43">${p.title}</text></svg>`) }" alt="${p.title}" />
+      <div class="hadiah-title">${p.title}</div>
+      <div class="hadiah-desc">${p.desc}</div>
+    `;
+    el.addEventListener("click", ()=> openPrize(p.id));
+    prizeGrid.appendChild(el);
+  });
+  document.getElementById("totalPrizes").textContent = arr.length;
+}
+
+/* Modal detail */
+const modal = document.getElementById("modal");
+const modalBody = document.getElementById("modalBody");
+document.getElementById("closeModal").addEventListener("click", ()=> modal.style.display = "none");
+
+function openPrize(id){
+  const p = load(LS.PRIZES).find(x=>x.id===id);
+  if(!p) return;
+  modal.style.display = "grid";
+  modalBody.innerHTML = `
+    <img src="${p.img || 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400"><rect width="100%" height="100%" fill="#fff5f5"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="28" fill="#b43">${p.title}</text></svg>`) }" style="width:100%;height:220px;object-fit:cover;border-radius:10px;margin-bottom:8px" />
+    <h4 style="margin:0">${p.title}</h4>
+    <p style="color:#556;margin-top:6px">${p.desc}</p>
+    <div style="margin-top:10px"><small class="small">(Hanya admin yang bisa memilih pemenang)</small></div>
+  `;
+}
+
+/* Join logic */
+document.getElementById("joinBtn").addEventListener("click", ()=>{
+  const name = document.getElementById("nameInput").value.trim();
+  if(!name){ alert("Masukkan nama dulu sayang 😊"); return; }
+  const parts = load(LS.PARTICIPANTS);
+  if(parts.some(p => p.name.toLowerCase() === name.toLowerCase())){
+    alert("Nama sudah terdaftar.");
+    return;
+  }
+  parts.push({ id: uid(6), name, ts: Date.now() });
+  save(LS.PARTICIPANTS, parts);
+  renderStats();
+  alert("Berhasil daftar — semoga beruntung!");
+});
+
+/* My entry check */
+document.getElementById("myEntryBtn").addEventListener("click", ()=>{
+  const name = document.getElementById("nameInput").value.trim();
+  if(!name) { alert("Masukkan nama untuk cek entry."); return; }
+  const parts = load(LS.PARTICIPANTS);
+  const me = parts.find(p => p.name.toLowerCase() === name.toLowerCase());
+  if(me) alert("Kamu sudah terdaftar. Good luck 🎉");
+  else alert("Belum terdaftar. Klik 'Ikut Sekarang' untuk mendaftar.");
+});
+
+/* Render stats & winners */
+function renderStats(){
+  const parts = load(LS.PARTICIPANTS);
+  document.getElementById("totalParticipants").textContent = parts.length;
+  const winners = load(LS.WINNERS);
+  const history = document.getElementById("historyArea");
+  if(!winners || winners.length === 0){
+    history.innerHTML = `<div style="color:#889;padding:8px">Belum ada pemenang.</div>`;
+  } else {
+    history.innerHTML = winners.slice(0,30).map(w=>{
+      const d = new Date(w.ts);
+      return `<div style="padding:8px;border-bottom:1px dashed #eee"><strong>${escapeHtml(w.name)}</strong><div style="font-size:12px;color:#667">${escapeHtml(w.prize)} — ${d.toLocaleString()}</div></div>`;
+    }).join("");
+  }
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+/* Countdown */
+function startCountdown(target){
+  function tick(){
+    const now = new Date();
+    const diff = target - now;
+    if(diff <= 0){
+      document.getElementById("cd-days").textContent = 0;
+      document.getElementById("cd-hours").textContent = "00";
+      document.getElementById("cd-mins").textContent = "00";
+      document.getElementById("cd-secs").textContent = "00";
+      return;
+    }
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor(diff % 86400000 / 3600000);
+    const m = Math.floor(diff % 3600000 / 60000);
+    const s = Math.floor(diff % 60000 / 1000);
+    document.getElementById("cd-days").textContent = d;
+    document.getElementById("cd-hours").textContent = String(h).padStart(2,'0');
+    document.getElementById("cd-mins").textContent = String(m).padStart(2,'0');
+    document.getElementById("cd-secs").textContent = String(s).padStart(2,'0');
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
+/* Fireworks & confetti (visual only) */
+const fw = document.getElementById("fireworks");
+const ctx = fw.getContext("2d");
+function resizeCanvas(){ fw.width = innerWidth; fw.height = innerHeight }
+addEventListener("resize", resizeCanvas);
+resizeCanvas();
+let particles = [];
+function launchFireworks(x,y){
+  for(let i=0;i<120;i++){
+    particles.push({
+      x, y,
+      vx: (Math.random()-0.5)*6,
+      vy: (Math.random()-1.5)*6,
+      life: 60 + Math.random()*60,
+      age: 0,
+      size: 1 + Math.random()*3,
+      hue: Math.floor(Math.random()*360)
+    });
+  }
+}
+function animateFW(){
+  ctx.clearRect(0,0,fw.width,fw.height);
+  for(let i=particles.length-1;i>=0;i--){
+    const p = particles[i];
+    p.age++;
+    p.vy += 0.03;
+    p.x += p.vx;
+    p.y += p.vy;
+    const lifeRatio = 1 - p.age / p.life;
+    if(lifeRatio <= 0){ particles.splice(i,1); continue; }
+    ctx.globalAlpha = lifeRatio;
+    ctx.fillStyle = `hsl(${p.hue} 80% 60%)`;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * lifeRatio * 1.8, 0, Math.PI*2);
+    ctx.fill();
+  }
+  requestAnimationFrame(animateFW);
+}
+animateFW();
+
+/* Run confetti (DOM) */
+function runConfetti(){
+  const count = 80;
+  for(let i=0;i<count;i++){
+    const el = document.createElement("div");
+    el.style.position="fixed";
+    el.style.left = Math.random()*100 + "%";
+    el.style.top = "-10px";
+    el.style.width = (6 + Math.random()*12) + "px";
+    el.style.height = (10 + Math.random()*18) + "px";
+    el.style.background = `hsl(${Math.random()*360} 80% 60%)`;
+    el.style.transform = `rotate(${Math.random()*360}deg)`;
+    el.style.opacity = 0.95;
+    el.style.borderRadius = "2px";
+    el.style.zIndex = 9999;
+    el.style.pointerEvents = "none";
+    document.body.appendChild(el);
+    const dur = 2000 + Math.random()*2000;
+    el.animate([
+      { transform: `translateY(0) rotate(0deg)` },
+      { transform: `translateY(${window.innerHeight + 200}px) rotate(${Math.random()*720}deg)` }
+    ], { duration: dur, easing: "cubic-bezier(.2,.8,.2,1)" });
+    setTimeout(()=> el.remove(), dur+100);
+  }
+}
+
+/* Check #hash for prize link */
+function checkHash(){
+  const h = location.hash.replace(/^#/, "");
+  if(!h) return;
+  if(h.startsWith("prize=")){
+    const id = h.split("=")[1];
+    openPrize(id);
+  }
+}
+
+/* Listen for changes in localStorage (so index updates when admin picks winner) */
+addEventListener("storage", (e)=>{
+  if([LS.WINNERS, LS.PARTICIPANTS, LS.PRIZES].includes(e.key)){
+    renderPrizes();
+    renderStats();
+    // if winners changed, fire celebration quickly
+    if(e.key === LS.WINNERS){
+      const winners = load(LS.WINNERS);
+      if(winners && winners.length){
+        // visual celebration for last winner
+        runConfetti();
+        launchFireworks(innerWidth/2, innerHeight*0.3);
       }
-      participants.push(name);
-      alert("Terima kasih " + name + ", kamu sudah ikut undian!");
-      document.getElementById("username").value = "";
     }
+  }
+});
 
-    function showAdminLogin() {
-      document.getElementById("userPanel").style.display = "none";
-      document.getElementById("adminLogin").style.display = "block";
-    }
+/* Boot */
+renderPrizes();
+renderStats();
+checkHash();
+const now = new Date();
+let year = now.getFullYear();
+let target = new Date(`${year}-08-17T00:00:00`);
+if(target < now) target = new Date(`${year+1}-08-17T00:00:00`);
+startCountdown(target);
 
-    function cancelLogin() {
-      document.getElementById("adminLogin").style.display = "none";
-      document.getElementById("userPanel").style.display = "block";
-    }
-
-    function loginAdmin() {
-      const pass = document.getElementById("adminPass").value;
-      if(pass === adminPassword) {
-        document.getElementById("adminLogin").style.display = "none";
-        document.getElementById("adminPanel").style.display = "block";
-        showParticipants();
-      } else {
-        alert("Password salah!");
-      }
-    }
-
-    function showParticipants() {
-      const listDiv = document.getElementById("participantsList");
-      listDiv.innerHTML = participants.length > 0 
-        ? participants.map((p, i) => (i+1)+". "+p).join("<br>")
-        : "<i>Belum ada peserta</i>";
-    }
-
-    function pickWinner() {
-      if(participants.length === 0) {
-        alert("Belum ada peserta!");
-        return;
-      }
-      const winner = participants[Math.floor(Math.random() * participants.length)];
-      document.getElementById("winner").innerText = "🎉 Pemenangnya adalah: " + winner + " 🎉";
-    }
-  </script>
+/* Small utility: show celebration if winners exist on load */
+if(load(LS.WINNERS).length){
+  // gentle celebration to show winners already selected
+  setTimeout(()=>{ runConfetti(); launchFireworks(innerWidth/2, innerHeight*0.25); }, 800);
+}
+</script>
 </body>
 </html>
