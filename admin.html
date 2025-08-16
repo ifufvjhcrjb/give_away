@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Bagi Hadiah 17 Agustus</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #ff0000, #ffffff);
+      color: #222;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #d10000;
+    }
+    .login-box, .admin-box {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      max-width: 400px;
+      margin: 20px auto;
+    }
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #d10000;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin-top: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #a00000;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      background: #f4f4f4;
+      margin: 5px 0;
+      padding: 10px;
+      border-radius: 6px;
+    }
+    .winner {
+      background: gold;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Admin Panel 🎉</h1>
+
+  <div class="login-box" id="loginBox">
+    <h2>Login Admin</h2>
+    <input type="password" id="adminPass" placeholder="Masukkan Password">
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div class="admin-box" id="adminBox" style="display:none;">
+    <h2>Daftar Peserta</h2>
+    <ul id="pesertaList"></ul>
+    <button onclick="pilihPemenang()">Pilih Pemenang 🎁</button>
+    <h3 id="winnerBox"></h3>
+  </div>
+
+  <script>
+    const ADMIN_PASSWORD = "kuro_kaii"; // ubah sesuai keinginan
+
+    function login() {
+      let pass = document.getElementById("adminPass").value;
+      if(pass === ADMIN_PASSWORD){
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("adminBox").style.display = "block";
+        loadPeserta();
+      } else {
+        alert("Password salah!");
+      }
+    }
+
+    function loadPeserta(){
+      let peserta = JSON.parse(localStorage.getItem("peserta")) || [];
+      let list = document.getElementById("pesertaList");
+      list.innerHTML = "";
+      peserta.forEach((p, i) => {
+        let li = document.createElement("li");
+        li.textContent = (i+1) + ". " + p;
+        list.appendChild(li);
+      });
+    }
+
+    function pilihPemenang(){
+      let peserta = JSON.parse(localStorage.getItem("peserta")) || [];
+      if(peserta.length === 0){
+        alert("Belum ada peserta!");
+        return;
+      }
+      let index = Math.floor(Math.random() * peserta.length);
+      let winner = peserta[index];
+      document.getElementById("winnerBox").innerHTML = 
+        "🎉 Pemenang adalah: <span class='winner'>" + winner + "</span>";
+    }
+  </script>
+</body>
+</html>
