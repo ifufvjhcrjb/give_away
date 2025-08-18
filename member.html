@@ -3,99 +3,100 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Giveaway Panel</title>
+<title>Member Giveaway</title>
 <style>
   body {
     font-family: Arial, sans-serif;
-    height: 100vh; margin:0;
+    background: linear-gradient(135deg,#0f172a,#1e293b);
+    color: #e5e7eb;
     display:flex; justify-content:center; align-items:center;
-    background:linear-gradient(135deg,#0f172a,#1e293b); color:#e5e7eb;
+    height:100vh; margin:0;
   }
   .container {
-    background:rgba(17,24,39,0.95);
-    padding:40px; border-radius:20px;
-    text-align:center; max-width:500px;
-    box-shadow:0 0 40px rgba(0,0,0,0.8);
+    background: rgba(17,24,39,0.95);
+    padding: 30px 40px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 500px;
+    text-align:center;
+    box-shadow:0 0 40px rgba(0,0,0,0.7);
   }
-  input[type="password"] {
-    padding:15px; width:80%; font-size:18px;
-    border-radius:12px; border:2px solid #3b82f6;
-    background:#111827; color:#e5e7eb;
-    outline:none; margin-bottom:15px;
+  input { 
+    padding:10px; width:80%; margin:10px 0; border-radius:10px; border:2px solid #3b82f6; 
+    font-size:16px; outline:none; background:#111827; color:#e5e7eb;
   }
-  button {
-    padding:12px 25px; font-size:18px;
-    border:none; border-radius:12px;
-    background:linear-gradient(45deg,#22c55e,#3b82f6);
-    color:#fff; cursor:pointer;
+  button { 
+    padding:12px 25px; font-size:18px; border:none; border-radius:12px;
+    background:linear-gradient(45deg,#22c55e,#3b82f6); color:#fff; cursor:pointer; 
+    margin-top:10px;
   }
   button:disabled { background:gray; cursor:not-allowed; }
-  .expired { font-size:22px; font-weight:bold; color:#f87171; }
+  .expired { font-size:22px; font-weight:bold; color:red; }
+  .cred-row { display:flex; justify-content:center; align-items:center; margin:10px 0; font-size:18px; }
+  .cred-row span { font-weight:bold; margin-right:10px; }
+  .copy-btn {
+    margin-left:10px; padding:6px 12px; font-size:14px;
+    border:none; border-radius:8px; cursor:pointer;
+    background:linear-gradient(45deg,#3b82f6,#6366f1); color:#fff;
+  }
 </style>
 </head>
 <body>
 <div class="container" id="mainContainer">
-  <h2>Masukkan Sandi untuk Membuka Giveaway</h2>
-  <input type="password" id="unlockPassword" placeholder="Masukkan sandi">
+  <h2>Masukkan Password Halaman</h2>
+  <input type="password" id="unlockPassword" placeholder="Password halaman">
   <button id="unlockBtn" onclick="checkPassword()">Buka</button>
 </div>
 
 <script>
+  const jamBatas = parseInt(localStorage.getItem("jamBatas") ?? 23);
+  const menitBatas = parseInt(localStorage.getItem("menitBatas") ?? 59);
+  const passwordHalaman = localStorage.getItem("passwordHalaman") ?? "";
+  const usernameGiveaway = localStorage.getItem("usernameGiveaway") ?? "";
+  const passwordGiveaway = localStorage.getItem("passwordGiveaway") ?? "";
 
-
-  //---------------- SETTING JAM & MENIT BATAS ----------------
-  const jamBatas   = 20; // jam (0-23) → contoh 17 = jam 5 sore
-  const menitBatas = 00; // menit (0-59) → contoh 30 = setengah
-  //-----------------------------------------------------------
-
-
-  const now = new Date();
-  const jamSekarang   = now.getHours();
-  const menitSekarang = now.getMinutes();
-  
-  
-  
-//--------------------- TEMPAT SETTING DATA -----------------------
-  const masterUnlockPassword = "";
-  const giveawayUsername = "";
-  const giveawayPassword = "";
-//------------------------------------------------------------------
-
-
-  // fungsi cek apakah sudah lewat waktu
-  function sudahLewat() {
-    if (jamSekarang > jamBatas) return true;
-    if (jamSekarang === jamBatas && menitSekarang >= menitBatas) return true;
+  function sudahLewat(){
+    const now = new Date();
+    const jamSekarang = now.getHours();
+    const menitSekarang = now.getMinutes();
+    if(jamSekarang > jamBatas) return true;
+    if(jamSekarang === jamBatas && menitSekarang >= menitBatas) return true;
     return false;
   }
 
-  // langsung cek saat halaman dibuka
   if(sudahLewat()){
     document.getElementById("mainContainer").innerHTML =
-      `<div class="expired">⏰  KURANG CEPET NGOCOKNYA (lewat jam ${jamBatas}:${menitBatas.toString().padStart(2,'0')})</div>`;
+      `<div class="expired">⏰ Kurang Cepet Ngocoknya Bang(lewat jam ${jamBatas}:${menitBatas.toString().padStart(2,'0')})</div>`;
   }
 
   function checkPassword(){
-    const nowCheck = new Date();
-    const jamNow = nowCheck.getHours();
-    const menitNow = nowCheck.getMinutes();
-
-    if(jamNow > jamBatas || (jamNow === jamBatas && menitNow >= menitBatas)){
-      alert("⏰ Udah Tekat Tolol, Liat Jam Makanya");
+    if(sudahLewat()){
+      alert("⏰ yah dikit lagi nih ");
       return;
     }
 
     const input = document.getElementById("unlockPassword").value;
-    if(input === masterUnlockPassword){
-      document.getElementById("mainContainer").innerHTML = `
+    if(input === passwordHalaman){
+      const container = document.getElementById("mainContainer");
+      container.innerHTML = `
         <div style="font-size:32px;color:#22c55e;margin-bottom:20px;">🎉 Selamat! 🎉</div>
-        <p>👤 Username: <b>${giveawayUsername}</b></p>
-        <p>🔒 Password: <b>${giveawayPassword}</b></p>
-        <p style="margin-top:20px;">Masukin <a href="https://ryzznihdekk.xyroku.my.id" target="_blank" style="color:#3b82f6;">disini</a> sebelum ada yang lain 👆</p>
+        <div class="cred-row">👤 Username: <span>${usernameGiveaway}</span>
+          <button class="copy-btn" onclick="copyToClipboard('${usernameGiveaway}')">Salin</button>
+        </div>
+        <div class="cred-row">🔒 Password: <span>${passwordGiveaway}</span>
+          <button class="copy-btn" onclick="copyToClipboard('${passwordGiveaway}')">Salin</button>
+        </div>
+        <p style="margin-top:20px;">Masukin <a href="https://ryzznihdekk.xyroku.my.id" target="_blank" style="color:#3b82f6;">disini</a> sebelum ada yang lain 🥰</p>
       `;
     } else {
-      alert("awokawok salah tolol sandinya 🤣🤣");
+      alert("❌ SALAH GOBLOK");
     }
+  }
+
+  function copyToClipboard(text){
+    navigator.clipboard.writeText(text).then(()=>{
+      alert("Berhasil disalin: " + text);
+    });
   }
 </script>
 </body>
