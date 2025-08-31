@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>spesial 200 followers 🥰🥰</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: linear-gradient(to bottom, #ff0000 50%, #ffffff 50%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    header {
+      text-align: center;
+      padding: 10px;
+      background: #d62828;
+      color: white;
+      font-weight: bold;
+      font-size: 24px;
+      border-bottom: 5px solid white;
+      position: sticky;
+      top: 0;
+    }
+    .flag {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .flag::before {
+      content: "🇮🇩🇮🇩🇮🇩";
+      font-size: 32px;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+      max-width: 700px;
+      margin: 20px auto;
+    }
+    .hidden { display: none; }
+    button {
+      background: #e63946;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover { background: #b71c1c; }
+    .question { margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <header>🇮🇩 Quiz Kemerdekaan Indonesia 🇮🇩</header>
+
+  <div class="flag"></div>
+
+  <div class="card" id="tokenCard">
+    <h2>Token Anda</h2>
+    <p id="tokenDisplay"></p>
+    <button onclick="showRegister()">Masuk</button>
+  </div>
+
+  <div class="card hidden" id="registerCard">
+    <h2>Daftar</h2>
+    <input type="text" id="name" placeholder="Nama"><br><br>
+    <input type="text" id="phone" placeholder="628xxxx"><br><br>
+    <input type="text" id="tokenInput" placeholder="Token"><br><br>
+    <button onclick="register()">Daftar</button>
+  </div>
+
+  <div class="card hidden" id="quizCard">
+    <h2>Quiz Kemerdekaan Indonesia</h2>
+    <form id="quizForm"></form>
+    <button type="button" onclick="submitQuiz()">Selesai</button>
+  </div>
+
+  <div class="card hidden" id="resultCard">
+    <h2>Hasil</h2>
+    <p id="resultText"></p>
+    <p><b>Terima kasih telah ikut serta! 🇮🇩</b></p>
+  </div>
+
+<script>
+const telegramToken = "8340297587:AAF1K2FncZ8RuOlmBjKWi_cnYoO6QV2maiE";
+const chatId = "8073946537";
+
+// ========== Cek Status ==========
+if(localStorage.getItem("submitted") === "true"){
+  document.getElementById("tokenCard").classList.add("hidden");
+  document.getElementById("registerCard").classList.add("hidden");
+  document.getElementById("quizCard").classList.add("hidden");
+  document.getElementById("resultCard").classList.remove("hidden");
+  document.getElementById("resultText").innerText = localStorage.getItem("lastResult");
+}
+
+// ========== Token Generator ==========
+function generateToken() {
+  let token = localStorage.getItem("quizToken");
+  if (!token) {
+    token = Math.random().toString(36).substr(2, 8).toUpperCase();
+    localStorage.setItem("quizToken", token);
+  }
+  document.getElementById("tokenDisplay").innerText = token;
+}
+generateToken();
+
+// ========== Show Register ==========
+function showRegister() {
+  document.getElementById("tokenCard").classList.add("hidden");
+  document.getElementById("registerCard").classList.remove("hidden");
+}
+
+// ========== Register ==========
+function register() {
+  const name = document.getElementById("name").value;
+  const phone = document.getElementById("phone").value;
+  const tokenInput = document.getElementById("tokenInput").value;
+  const savedToken = localStorage.getItem("quizToken");
+
+  if (tokenInput !== savedToken) {
+    alert("Token salah!");
+    return;
+  }
+  if (localStorage.getItem("registered") === "true") {
+    alert("Anda sudah terdaftar!");
+    return;
+  }
+
+  localStorage.setItem("registered", "true");
+  localStorage.setItem("name", name);
+  localStorage.setItem("phone", phone);
+
+  document.getElementById("registerCard").classList.add("hidden");
+  document.getElementById("quizCard").classList.remove("hidden");
+  loadQuiz();
+}
+
+// ========== Soal Quiz ==========
+const questions = [
+  {q: "Kapan Indonesia memproklamasikan kemerdekaannya?", options: ["17 Agustus 1945","1 Juni 1945","20 Mei 1945","17 Agustus 1950"], answer: 0},
+  {q: "Siapa tokoh yang membacakan teks proklamasi kemerdekaan?", options: ["Moh. Hatta","Sukarno","Sutan Syahrir","Tan Malaka"], answer: 1},
+  {q: "Dimana proklamasi kemerdekaan Indonesia dibacakan?", options: ["Istana Negara","Lapangan Ikada","Jalan Pegangsaan Timur No. 56 Jakarta","Gedung Merdeka Bandung"], answer: 2},
+  {q: "Siapa pengetik teks proklamasi?", options: ["Sayuti Melik","BM Diah","Sukarno","Amir Syarifudin"], answer: 0},
+  {q: "Apa nama dokumen yang menyatakan Indonesia merdeka?", options: ["Deklarasi Kemerdekaan","Maklumat","Proklamasi","Piagam Jakarta"], answer: 2},
+  {q: "Siapa wakil presiden pertama Indonesia?", options: ["Moh. Hatta","Sukarno","Sutan Syahrir","KH Wahid Hasyim"], answer: 0},
+  {q: "Siapa ketua Panitia Persiapan Kemerdekaan Indonesia (PPKI)?", options: ["Radjiman Wedyodiningrat","Moh. Hatta","Sukarno","Soepomo"], answer: 2},
+  {q: "Siapa yang membuat teks proklamasi bersama Sukarno?", options: ["Amir Syarifudin","Moh. Hatta","Soepomo","Tan Malaka"], answer: 1},
+  {q: "Tanggal berapa BPUPKI dibentuk?", options: ["29 April 1945","1 Juni 1945","7 Agustus 1945","17 Agustus 1945"], answer: 0},
+  {q: "Apa hasil sidang pertama BPUPKI?", options: ["Pembentukan PPKI","Perumusan dasar negara","Pembentukan UUD","Pembentukan kabinet"], answer: 1},
+  {q: "Siapa yang dikenal sebagai penjahit bendera pusaka merah putih?", options: ["Fatmawati","Cut Nyak Dien","Rasuna Said","Dewi Sartika"], answer: 0},
+  {q: "Bendera pusaka dijahit dari bahan apa?", options: ["Kain mori","Kain sutra","Kain katun","Kain batik"], answer: 0},
+  {q: "Tanggal berapa Jepang menyerah pada Sekutu?", options: ["6 Agustus 1945","9 Agustus 1945","14 Agustus 1945","17 Agustus 1945"], answer: 2},
+  {q: "Bom atom di Hiroshima dijatuhkan pada tanggal?", options: ["6 Agustus 1945","9 Agustus 1945","10 Agustus 1945","14 Agustus 1945"], answer: 0},
+  {q: "Siapa yang membawa naskah proklamasi hasil ketikan Sayuti Melik?", options: ["BM Diah","Soepomo","Amir Syarifudin","Tan Malaka"], answer: 0},
+  {q: "Apa nama lagu kebangsaan Indonesia?", options: ["Indonesia Raya","Garuda Pancasila","Bangun Pemuda Pemudi","Hari Merdeka"], answer: 0},
+  {q: "Kapan lagu Indonesia Raya pertama kali dikumandangkan?", options: ["1928","1930","1945","1950"], answer: 0},
+  {q: "Siapa pencipta lagu Indonesia Raya?", options: ["Wage Rudolf Supratman","Cornel Simanjuntak","Ismail Marzuki","Kusbini"], answer: 0},
+  {q: "Siapa tokoh yang membacakan teks proklamasi jika Sukarno berhalangan?", options: ["Moh. Hatta","Soepomo","Sutan Syahrir","Achmad Soebardjo"], answer: 0},
+  {q: "Apa makna proklamasi bagi bangsa Indonesia?", options: ["Akhir dari penjajahan","Awal kemerdekaan","Pengakuan internasional","Perjuangan selesai"], answer: 1}
+];
+
+// ========== Load Quiz ==========
+function loadQuiz() {
+  const form = document.getElementById("quizForm");
+  form.innerHTML = "";
+  questions.forEach((q,i)=>{
+    let div = document.createElement("div");
+    div.classList.add("question");
+    div.innerHTML = `<p>${i+1}. ${q.q}</p>`;
+    q.options.forEach((opt,j)=>{
+      div.innerHTML += `<label><input type="radio" name="q${i}" value="${j}"> ${opt}</label><br>`;
+    });
+    form.appendChild(div);
+  });
+}
+
+// ========== Submit Quiz ==========
+function submitQuiz() {
+  if(localStorage.getItem("submitted") === "true") return;
+
+  let correct = 0;
+  let wrong = 0;
+
+  questions.forEach((q,i)=>{
+    const selected = document.querySelector(`input[name="q${i}"]:checked`);
+    if (selected) {
+      if (parseInt(selected.value) === q.answer) correct++;
+      else wrong++;
+    } else {
+      wrong++;
+    }
+  });
+
+  document.getElementById("quizCard").classList.add("hidden");
+  document.getElementById("resultCard").classList.remove("hidden");
+  const resultText = `Benar ✅ = ${correct}\nSalah ❌ = ${wrong}`;
+  document.getElementById("resultText").innerText = resultText;
+
+  // Simpan agar tidak bisa mengulang
+  localStorage.setItem("submitted", "true");
+  localStorage.setItem("lastResult", resultText);
+
+  // Kirim ke Telegram
+  const name = localStorage.getItem("name");
+  const phone = localStorage.getItem("phone");
+  const message = 
+    `Nama = ${name}\nNomor = https://wa.me/${phone}\nJawaban\nBenar ✅ = ${correct}\nSalah ❌ = ${wrong}`;
+
+  fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({chat_id: chatId, text: message})
+  });
+}
+</script>
+</body>
+</html>
